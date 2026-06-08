@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Colonizer - Mission Control</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+
+        .solar-system-section {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            padding: 20px;
+        }
+
+        .solar-system-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #solarSystemCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            border-radius: 10px;
+        }
+
+        .planet-info-popup {
+            position: absolute;
+            background: rgba(6, 18, 36, 0.95);
+            border: 2px solid #66fcf1;
+            border-radius: 15px;
+            padding: 20px;
+            color: #fff;
+            max-width: 350px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.3);
+        }
+
+        .planet-info-popup h3 {
+            color: #66fcf1;
+            margin-bottom: 10px;
+        }
+
+        .planet-info-popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #66fcf1;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .spacecraft-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(6, 18, 36, 0.9);
+            border: 1px solid #66fcf1;
+            border-radius: 10px;
+            padding: 15px;
+            color: #66fcf1;
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .zoom-btn {
+            background: rgba(6, 18, 36, 0.9);
+            border: 2px solid #66fcf1;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            color: #66fcf1;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(102, 252, 241, 0.2);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.4);
+        }
+
+        .game-section {
+            padding: 30px;
+            background: rgba(13, 28, 53, 0.98);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 100vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #66fcf1 rgba(102, 252, 241, 0.1);
+        }
+
+        .mission-info {
+            background: rgba(6, 18, 36, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #66fcf1;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
+        }
+
+        h2, h3 {
+            color: #66fcf1;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #66fcf1, #45a29e);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="solar-system-section">
+        <div class="solar-system-container">
+            <canvas id="solarSystemCanvas" width="800" height="600"></canvas>
+            <div class="planet-info-popup" id="planetInfoPopup">
+                <button class="close-btn" onclick="closePlanetInfo()">×</button>
+                <h3 id="planetName"></h3>
+                <p id="planetDescription"></p>
+                <p id="planetMoons"></p>
+                <p id="planetDistance"></p>
+            </div>
+            <div class="spacecraft-controls">
+                <div>🚀 Spacecraft Position</div>
+                <div>Click anywhere to navigate</div>
+                <div>Use mouse wheel to zoom</div>
+            </div>
+            <div class="zoom-controls">
+                <button class="zoom-btn" onclick="zoomIn()">+</button>
+                <button class="zoom-btn" onclick="zoomOut()">-</button>
+                <button class="zoom-btn" onclick="resetZoom()" style="font-size: 14px;">⌂</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-section">
+        <div class="mission-info">
+            <h2>Enhanced Solar System</h2>
+            <p>Click on planets to zoom in and learn about them!</p>
+            <p>Use zoom controls or mouse wheel to navigate</p>
+        </div>
+    </div>
+
+    <script>
+        // ENHANCED SOLAR SYSTEM IMPLEMENTATION
+        const canvas = document.getElementById('solarSystemCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Zoom and camera system
+        let zoomLevel = 1;
+        let cameraX = 0;
+        let cameraY = 0;
+        const minZoom = 0.3;
+        const maxZoom = 5;
+        let focusedPlanet = null;
+        
+        // Enhanced solar system data with slower speeds and better graphics
+        const solarSystem = {
+            sun: { x: 0, y: 0, radius: 30, color: '#FDB813', glowRadius: 60 },
+            planets: [
+                { 
+                    name: 'Mercury', distance: 80, radius: 5, color: '#8C7853', angle: 0, speed: 0.006, 
+                    description: 'The closest planet to the Sun with extreme temperature variations. Surface temperatures range from 427°C during the day to -173°C at night.',
+                    moons: 'No natural satellites', realDistance: '58M km',
+                    texture: { craters: true, atmosphere: false }
+                },
+                { 
+                    name: 'Venus', distance: 110, radius: 7, color: '#FFC649', angle: 0, speed: 0.004,
+                    description: 'The hottest planet in our solar system with a thick, toxic atmosphere of carbon dioxide and sulfuric acid clouds.',
+                    moons: 'No natural satellites', realDistance: '108M km',
+                    texture: { clouds: true, atmosphere: true }
+                },
+                { 
+                    name: 'Earth', distance: 150, radius: 8, color: '#6B93D6', angle: 0, speed: 0.003,
+                    description: 'Our home planet. The only known planet with life, featuring vast oceans, diverse ecosystems, and a protective atmosphere.',
+                    moons: 'Luna (The Moon) - Our largest natural satellite', realDistance: '150M km',
+                    texture: { continents: true, atmosphere: true, clouds: true }
+                },
+                { 
+                    name: 'Mars', distance: 190, radius: 6, color: '#CD5C5C', angle: 0, speed: 0.002,
+                    description: 'The Red Planet, named for its rusty color from iron oxide. Target for human colonization with polar ice caps and the largest volcano in the solar system.',
+                    moons: 'Phobos and Deimos - Two small, irregularly shaped moons', realDistance: '225M km',
+                    texture: { dust: true, polar_caps: true }
+                },
+                { 
+                    name: 'Jupiter', distance: 280, radius: 22, color: '#D8CA9D', angle: 0, speed: 0.001,
+                    description: 'The largest planet in our solar system. A gas giant with a Great Red Spot storm larger than Earth and a powerful magnetic field.',
+                    moons: 'Io, Europa, Ganymede, Callisto (Galilean moons) + 75 others', realDistance: '778M km',
+                    texture: { bands: true, great_red_spot: true }
+                },
+                { 
+                    name: 'Saturn', distance: 350, radius: 20, color: '#FAD5A5', angle: 0, speed: 0.0008,
+                    description: 'Famous for its spectacular ring system made of ice and rock particles. A gas giant less dense than water.',
+                    moons: 'Titan (larger than Mercury), Enceladus, Mimas + 80 others', realDistance: '1.4B km',
+                    texture: { rings: true, bands: true }
+                },
+                { 
+                    name: 'Uranus', distance: 420, radius: 14, color: '#4FD0E7', angle: 0, speed: 0.0006,
+                    description: 'An ice giant that rotates on its side at a 98-degree tilt. Has faint rings and a methane-rich atmosphere.',
+                    moons: 'Miranda, Ariel, Umbriel, Titania, Oberon + 22 others', realDistance: '2.9B km',
+                    texture: { tilt: true, rings: true, ice: true }
+                },
+                { 
+                    name: 'Neptune', distance: 480, radius: 14, color: '#4B70DD', angle: 0, speed: 0.0004,
+                    description: 'The windiest planet with supersonic winds up to 2,100 km/h. The furthest known planet from the Sun.',
+                    moons: 'Triton (orbits backwards), Nereid + 12 others', realDistance: '4.5B km',
+                    texture: { storms: true, ice: true }
+                }
+            ],
+            spacecraft: { x: 200, y: 0, targetX: 200, targetY: 0, speed: 3 },
+            asteroidBelt: { innerRadius: 230, outerRadius: 260, particles: [] }
+        };
+        
+        // Initialize asteroid belt
+        for (let i = 0; i < 50; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const distance = solarSystem.asteroidBelt.innerRadius + Math.random() * 30;
+            solarSystem.asteroidBelt.particles.push({
+                angle: angle,
+                distance: distance,
+                size: Math.random() * 2 + 1,
+                speed: 0.001 + Math.random() * 0.001
+            });
+        }
+        
+        // Moon orbits
+        const moons = {
+            earth: { angle: 0, distance: 25, radius: 3, speed: 0.05 },
+            mars: [
+                { angle: 0, distance: 15, radius: 1.5, speed: 0.08, name: 'Phobos' },
+                { angle: Math.PI, distance: 20, radius: 1, speed: 0.04, name: 'Deimos' }
+            ]
+        };
+        
+        // Enhanced drawing functions
+        function drawStarField() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw twinkling stars
+            ctx.fillStyle = '#FFF';
+            for (let i = 0; i < 200; i++) {
+                const x = (Math.sin(i * 0.1) * 1000 + canvas.width) % canvas.width;
+                const y = (Math.cos(i * 0.15) * 1000 + canvas.height) % canvas.height;
+                const brightness = 0.3 + Math.sin(Date.now() * 0.001 + i) * 0.3;
+                ctx.globalAlpha = brightness;
+                ctx.fillRect(x, y, 1, 1);
+            }
+            ctx.globalAlpha = 1;
+            
+            // Draw distant galaxies
+            for (let i = 0; i < 5; i++) {
+                const x = (i * 200 + 100) % canvas.width;
+                const y = (i * 150 + 80) % canvas.height;
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, 20);
+                gradient.addColorStop(0, 'rgba(102, 252, 241, 0.1)');
+                gradient.addColorStop(1, 'rgba(102, 252, 241, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawSun() {
+            const sun = solarSystem.sun;
+            const screenX = (sun.x + cameraX) * zoomLevel + canvas.width / 2;
+            const screenY = (sun.y + cameraY) * zoomLevel + canvas.height / 2;
+            const radius = sun.radius * zoomLevel;
+            
+            // Sun corona
+            const coronaGradient = ctx.createRadialGradient(screenX, screenY, radius, screenX, screenY, radius * 3);
+            coronaGradient.addColorStop(0, 'rgba(253, 184, 19, 0.3)');
+            coronaGradient.addColorStop(0.5, 'rgba(255, 140, 0, 0.1)');
+            coronaGradient.addColorStop(1, 'rgba(255, 69, 0, 0)');
+            ctx.fillStyle = coronaGradient;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, radius * 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Sun surface with texture
+            const sunGradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, radius);
+            sunGradient.addColorStop(0, '#FFD700');
+            sunGradient.addColorStop(0.7, '#FDB813');
+            sunGradient.addColorStop(1, '#FF8C00');
+            ctx.fillStyle = sunGradient;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Solar flares
+            const time = Date.now() * 0.001;
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + time * 0.5;
+                const flareLength = radius * (1.2 + Math.sin(time * 2 + i) * 0.3);
+                const flareX = screenX + Math.cos(angle) * flareLength;
+                const flareY = screenY + Math.sin(angle) * flareLength;
+                
+                ctx.strokeStyle = `rgba(255, 200, 0, ${0.3 + Math.sin(time * 3 + i) * 0.2})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(screenX + Math.cos(angle) * radius, screenY + Math.sin(angle) * radius);
+                ctx.lineTo(flareX, flareY);
+                ctx.stroke();
+            }
+        }
+        
+        function drawPlanet(planet) {
+            const screenX = (planet.x + cameraX) * zoomLevel + canvas.width / 2;
+            const screenY = (planet.y + cameraY) * zoomLevel + canvas.height / 2;
+            const radius = planet.radius * zoomLevel;
+            
+            // Skip if planet is off-screen
+            if (screenX < -radius || screenX > canvas.width + radius || 
+                screenY < -radius || screenY > canvas.height + radius) return;
+            
+            // Planet atmosphere
+            if (planet.texture && planet.texture.atmosphere) {
+                const atmGradient = ctx.createRadialGradient(screenX, screenY, radius, screenX, screenY, radius * 1.3);
+                atmGradient.addColorStop(0, 'rgba(135, 206, 235, 0)');
+                atmGradient.addColorStop(1, 'rgba(135, 206, 235, 0.3)');
+                ctx.fillStyle = atmGradient;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, radius * 1.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Planet surface with gradient
+            const planetGradient = ctx.createRadialGradient(
+                screenX - radius * 0.3, screenY - radius * 0.3, 0,
+                screenX, screenY, radius
+            );
+            planetGradient.addColorStop(0, lightenColor(planet.color, 30));
+            planetGradient.addColorStop(0.7, planet.color);
+            planetGradient.addColorStop(1, darkenColor(planet.color, 30));
+            ctx.fillStyle = planetGradient;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Planet-specific features
+            drawPlanetFeatures(planet, screenX, screenY, radius);
+            
+            // Planet name (only show if zoomed in enough)
+            if (zoomLevel > 0.8) {
+                ctx.fillStyle = '#66fcf1';
+                ctx.font = `${Math.max(10, 12 * zoomLevel)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.fillText(planet.name, screenX, screenY - radius - 10);
+            }
+        }
+        
+        function drawPlanetFeatures(planet, x, y, radius) {
+            const time = Date.now() * 0.001;
+            
+            switch (planet.name) {
+                case 'Earth':
+                    // Continents
+                    ctx.fillStyle = '#228B22';
+                    for (let i = 0; i < 6; i++) {
+                        const angle = (i / 6) * Math.PI * 2;
+                        const contX = x + Math.cos(angle + time * 0.1) * radius * 0.3;
+                        const contY = y + Math.sin(angle + time * 0.1) * radius * 0.3;
+                        ctx.beginPath();
+                        ctx.arc(contX, contY, radius * 0.2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    // Clouds
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    for (let i = 0; i < 4; i++) {
+                        const angle = (i / 4) * Math.PI * 2 + time * 0.2;
+                        const cloudX = x + Math.cos(angle) * radius * 0.6;
+                        const cloudY = y + Math.sin(angle) * radius * 0.6;
+                        ctx.beginPath();
+                        ctx.arc(cloudX, cloudY, radius * 0.15, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    break;
+                    
+                case 'Mars':
+                    // Polar ice caps
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.beginPath();
+                    ctx.arc(x, y - radius * 0.7, radius * 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x, y + radius * 0.7, radius * 0.15, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+                    
+                case 'Jupiter':
+                    // Great Red Spot
+                    ctx.fillStyle = '#CC4125';
+                    ctx.beginPath();
+                    ctx.ellipse(x + radius * 0.3, y, radius * 0.3, radius * 0.2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Bands
+                    ctx.strokeStyle = 'rgba(139, 69, 19, 0.5)';
+                    ctx.lineWidth = 2;
+                    for (let i = -2; i <= 2; i++) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, radius + i * radius * 0.2, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case 'Saturn':
+                    // Rings
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                    ctx.lineWidth = 1;
+                    for (let i = 1; i <= 3; i++) {
+                        ctx.beginPath();
+                        ctx.ellipse(x, y, radius * (1.5 + i * 0.2), radius * (0.1 + i * 0.05), 0, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    break;
+            }
+        }
+        
+        function drawMoons() {
+            // Earth's moon
+            const earth = solarSystem.planets.find(p => p.name === 'Earth');
+            if (earth) {
+                moons.earth.angle += moons.earth.speed;
+                const moonX = earth.x + Math.cos(moons.earth.angle) * moons.earth.distance;
+                const moonY = earth.y + Math.sin(moons.earth.angle) * moons.earth.distance;
+                const screenX = (moonX + cameraX) * zoomLevel + canvas.width / 2;
+                const screenY = (moonY + cameraY) * zoomLevel + canvas.height / 2;
+                const radius = moons.earth.radius * zoomLevel;
+                
+                ctx.fillStyle = '#C0C0C0';
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Moon craters
+                ctx.fillStyle = '#A0A0A0';
+                for (let i = 0; i < 3; i++) {
+                    const craterX = screenX + (i - 1) * radius * 0.4;
+                    const craterY = screenY + Math.sin(i) * radius * 0.3;
+                    ctx.beginPath();
+                    ctx.arc(craterX, craterY, radius * 0.15, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // Mars moons
+            const mars = solarSystem.planets.find(p => p.name === 'Mars');
+            if (mars) {
+                moons.mars.forEach(moon => {
+                    moon.angle += moon.speed;
+                    const moonX = mars.x + Math.cos(moon.angle) * moon.distance;
+                    const moonY = mars.y + Math.sin(moon.angle) * moon.distance;
+                    const screenX = (moonX + cameraX) * zoomLevel + canvas.width / 2;
+                    const screenY = (moonY + cameraY) * zoomLevel + canvas.height / 2;
+                    const radius = moon.radius * zoomLevel;
+                    
+                    ctx.fillStyle = '#8B7355';
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+        
+        function drawAsteroidBelt() {
+            ctx.fillStyle = '#8B4513';
+            solarSystem.asteroidBelt.particles.forEach(asteroid => {
+                asteroid.angle += asteroid.speed;
+                const x = solarSystem.sun.x + Math.cos(asteroid.angle) * asteroid.distance;
+                const y = solarSystem.sun.y + Math.sin(asteroid.angle) * asteroid.distance;
+                const screenX = (x + cameraX) * zoomLevel + canvas.width / 2;
+                const screenY = (y + cameraY) * zoomLevel + canvas.height / 2;
+                const size = asteroid.size * zoomLevel;
+                
+                if (screenX > -10 && screenX < canvas.width + 10 && 
+                    screenY > -10 && screenY < canvas.height + 10) {
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+        }
+        
+        function drawOrbitPaths() {
+            ctx.strokeStyle = 'rgba(102, 252, 241, 0.15)';
+            ctx.lineWidth = 1;
+            
+            solarSystem.planets.forEach(planet => {
+                const centerX = (solarSystem.sun.x + cameraX) * zoomLevel + canvas.width / 2;
+                const centerY = (solarSystem.sun.y + cameraY) * zoomLevel + canvas.height / 2;
+                const radius = planet.distance * zoomLevel;
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            });
+        }
+        
+        function drawSpacecraft() {
+            const spacecraft = solarSystem.spacecraft;
+            const dx = spacecraft.targetX - spacecraft.x;
+            const dy = spacecraft.targetY - spacecraft.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > spacecraft.speed) {
+                spacecraft.x += (dx / distance) * spacecraft.speed;
+                spacecraft.y += (dy / distance) * spacecraft.speed;
+            } else {
+                spacecraft.x = spacecraft.targetX;
+                spacecraft.y = spacecraft.targetY;
+            }
+            
+            const screenX = (spacecraft.x + cameraX) * zoomLevel + canvas.width / 2;
+            const screenY = (spacecraft.y + cameraY) * zoomLevel + canvas.height / 2;
+            const size = 6 * zoomLevel;
+            
+            // Spacecraft body
+            ctx.fillStyle = '#66fcf1';
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Spacecraft trail
+            ctx.strokeStyle = 'rgba(102, 252, 241, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(screenX, screenY);
+            ctx.lineTo(screenX - dx * 0.2, screenY - dy * 0.2);
+            ctx.stroke();
+            
+            // Engine glow
+            if (distance > spacecraft.speed) {
+                const glowGradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 2);
+                glowGradient.addColorStop(0, 'rgba(102, 252, 241, 0.5)');
+                glowGradient.addColorStop(1, 'rgba(102, 252, 241, 0)');
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, size * 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        function drawSolarSystem() {
+            ctx.save();
+            
+            drawStarField();
+            drawOrbitPaths();
+            drawAsteroidBelt();
+            drawSun();
+            
+            // Update and draw planets
+            solarSystem.planets.forEach(planet => {
+                planet.angle += planet.speed;
+                planet.x = solarSystem.sun.x + Math.cos(planet.angle) * planet.distance;
+                planet.y = solarSystem.sun.y + Math.sin(planet.angle) * planet.distance;
+                drawPlanet(planet);
+            });
+            
+            drawMoons();
+            drawSpacecraft();
+            
+            ctx.restore();
+        }
+        
+        // Zoom functions
+        function zoomIn() {
+            zoomLevel = Math.min(zoomLevel * 1.5, maxZoom);
+        }
+        
+        function zoomOut() {
+            zoomLevel = Math.max(zoomLevel / 1.5, minZoom);
+        }
+        
+        function resetZoom() {
+            zoomLevel = 1;
+            cameraX = 0;
+            cameraY = 0;
+            focusedPlanet = null;
+        }
+        
+        // Utility functions
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+        }
+        
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) - amt;
+            const G = (num >> 8 & 0x00FF) - amt;
+            const B = (num & 0x0000FF) - amt;
+            return "#" + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+                (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+                (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
+        }
+        
+        // Enhanced click handler with zoom to planet feature
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = (e.clientX - rect.left - canvas.width / 2) / zoomLevel - cameraX;
+            const clickY = (e.clientY - rect.top - canvas.height / 2) / zoomLevel - cameraY;
+            
+            // Check if clicked on a planet
+            let clickedPlanet = null;
+            solarSystem.planets.forEach(planet => {
+                const distance = Math.sqrt((clickX - planet.x) ** 2 + (clickY - planet.y) ** 2);
+                if (distance <= planet.radius + 5) {
+                    clickedPlanet = planet;
+                }
+            });
+            
+            if (clickedPlanet) {
+                // Zoom in on the planet and show info
+                focusedPlanet = clickedPlanet;
+                zoomLevel = 3;
+                cameraX = -clickedPlanet.x;
+                cameraY = -clickedPlanet.y;
+                showPlanetInfo(clickedPlanet, e.clientX, e.clientY);
+            } else {
+                // Move spacecraft to clicked location
+                solarSystem.spacecraft.targetX = clickX;
+                solarSystem.spacecraft.targetY = clickY;
+                closePlanetInfo();
+            }
+        });
+        
+        // Mouse wheel zoom
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY < 0) {
+                zoomIn();
+            } else {
+                zoomOut();
+            }
+        });
+        
+        function showPlanetInfo(planet, x, y) {
+            const popup = document.getElementById('planetInfoPopup');
+            document.getElementById('planetName').textContent = planet.name;
+            document.getElementById('planetDescription').textContent = planet.description;
+            document.getElementById('planetMoons').textContent = `Most Prominent Moon(s): ${planet.moons}`;
+            document.getElementById('planetDistance').textContent = `Distance from Sun: ${planet.realDistance}`;
+            
+            popup.style.left = Math.min(x, window.innerWidth - 370) + 'px';
+            popup.style.top = Math.min(y, window.innerHeight - 250) + 'px';
+            popup.style.display = 'block';
+        }
+        
+        function closePlanetInfo() {
+            document.getElementById('planetInfoPopup').style.display = 'none';
+        }
+        
+        // Resize canvas to fit container
+        function resizeCanvas() {
+            const container = document.querySelector('.solar-system-container');
+            canvas.width = container.clientWidth - 40;
+            canvas.height = container.clientHeight - 40;
+        }
+        
+        // Initialize solar system
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Start animation loop
+        function animate() {
+            drawSolarSystem();
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        console.log('🌌 Enhanced Solar System: Click on planets to zoom in and learn about them!');
+        console.log('🔧 Use zoom controls or mouse wheel to navigate the solar system!');
+    </script>
+</body>
+</html>

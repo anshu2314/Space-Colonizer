@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔩 Metal Extractor - Space Colonizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .tool-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(6, 18, 36, 0.9);
+            padding: 25px 35px;
+            border-radius: 20px;
+            border: 2px solid #ffe66d;
+            box-shadow: 0 0 30px rgba(255, 230, 109, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            background: linear-gradient(45deg, #ffe66d, #ffcc02);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 230, 109, 0.4);
+        }
+
+        .tool-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tool-icon {
+            font-size: 3em;
+            filter: drop-shadow(0 0 15px rgba(255, 230, 109, 0.6));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .tool-name {
+            font-size: 2.5em;
+            color: #ffe66d;
+            text-shadow: 0 0 20px rgba(255, 230, 109, 0.5);
+            margin: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 2px solid rgba(255, 230, 109, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 230, 109, 0.3);
+            border-color: rgba(255, 230, 109, 0.6);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ffe66d;
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .upgrade-section {
+            background: rgba(6, 18, 36, 0.9);
+            border: 2px solid #ffe66d;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 0 30px rgba(255, 230, 109, 0.2);
+        }
+
+        .upgrade-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .upgrade-preview {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 30px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .level-display {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border-radius: 15px;
+            border: 1px solid rgba(255, 230, 109, 0.3);
+        }
+
+        .level-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffe66d;
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+        }
+
+        .level-label {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+        }
+
+        .upgrade-arrow {
+            font-size: 3em;
+            color: #ffe66d;
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateX(0); }
+            40% { transform: translateX(-10px); }
+            60% { transform: translateX(10px); }
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .cost-item {
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 1px solid rgba(255, 230, 109, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .cost-item.insufficient {
+            border-color: rgba(255, 68, 68, 0.6);
+            background: linear-gradient(135deg, rgba(63, 23, 23, 0.9), rgba(53, 13, 13, 0.9));
+        }
+
+        .cost-icon {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+        }
+
+        .cost-amount {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #ffe66d;
+        }
+
+        .cost-item.insufficient .cost-amount {
+            color: #ff4444;
+        }
+
+        .cost-label {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+        }
+
+        .upgrade-btn {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ffe66d, #ffcc02);
+            border: none;
+            border-radius: 30px;
+            color: #000;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 8px 25px rgba(255, 230, 109, 0.4);
+        }
+
+        .upgrade-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(255, 230, 109, 0.5);
+        }
+
+        .upgrade-btn:disabled {
+            background: linear-gradient(135deg, #666, #444);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .live-resources {
+            background: rgba(6, 18, 36, 0.9);
+            border: 2px solid #ffe66d;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 30px rgba(255, 230, 109, 0.2);
+        }
+
+        .resource-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .resource-item {
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 1px solid rgba(255, 230, 109, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .resource-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .resource-count {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffe66d;
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+            margin-bottom: 5px;
+        }
+
+        .resource-name {
+            font-size: 1em;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .generation-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 230, 109, 0.2);
+            border: 1px solid rgba(255, 230, 109, 0.4);
+            border-radius: 15px;
+            padding: 5px 10px;
+            font-size: 0.8em;
+            color: #ffe66d;
+            font-weight: bold;
+        }
+
+        .tool-description {
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 1px solid rgba(255, 230, 109, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .description-text {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .launch-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(6, 18, 36, 0.9);
+            border: 1px solid #ffe66d;
+            border-radius: 8px;
+            padding: 15px 25px;
+            color: #ffe66d;
+            font-size: 1.1em;
+            z-index: 2000;
+            animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards;
+            box-shadow: 0 0 20px rgba(255, 230, 109, 0.3);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        .floating-animation {
+            position: absolute;
+            color: #ffe66d;
+            font-weight: bold;
+            font-size: 1.2em;
+            pointer-events: none;
+            animation: floatUp 2s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        h1, h2, h3 {
+            color: #ffe66d;
+            text-shadow: 0 0 15px rgba(255, 230, 109, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="tool-container">
+        <div class="tool-header">
+            <button class="back-btn" onclick="goBackToResources()">← Back to Resources</button>
+            <div class="tool-title">
+                <div class="tool-icon">🔩</div>
+                <h1 class="tool-name">Metal Extractor</h1>
+            </div>
+        </div>
+
+        <div class="tool-description">
+            <p class="description-text">
+                The Metal Extractor is a sophisticated mining and processing facility that automatically extracts and refines metal ores from the ground. 
+                Essential for advanced construction projects and technology development, this tool becomes more efficient with each upgrade.
+            </p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="currentLevel">0</div>
+                <div class="stat-label">Current Level</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="generationRate">0</div>
+                <div class="stat-label">Metal/Second</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalGenerated">0</div>
+                <div class="stat-label">Total Generated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="efficiency">0%</div>
+                <div class="stat-label">Efficiency</div>
+            </div>
+        </div>
+
+        <div class="upgrade-section">
+            <div class="upgrade-header">
+                <h2>🔧 Tool Upgrade</h2>
+            </div>
+            
+            <div class="upgrade-preview">
+                <div class="level-display">
+                    <div class="level-number" id="currentLevelDisplay">0</div>
+                    <div class="level-label">Current Level</div>
+                    <div style="margin-top: 10px; color: #ffe66d;" id="currentGenDisplay">0 metal/sec</div>
+                </div>
+                
+                <div class="upgrade-arrow">→</div>
+                
+                <div class="level-display">
+                    <div class="level-number" id="nextLevelDisplay">1</div>
+                    <div class="level-label">Next Level</div>
+                    <div style="margin-top: 10px; color: #ffe66d;" id="nextGenDisplay">2 metal/sec</div>
+                </div>
+            </div>
+
+            <h3 style="text-align: center; margin-bottom: 20px;">💰 Upgrade Cost</h3>
+            <div class="cost-breakdown" id="costBreakdown">
+                <!-- Cost items will be populated by JavaScript -->
+            </div>
+
+            <button class="upgrade-btn" id="upgradeBtn" onclick="upgradeTool()">
+                🔧 Upgrade Metal Extractor
+            </button>
+        </div>
+
+        <div class="live-resources">
+            <h2 style="text-align: center; margin-bottom: 25px;">📊 Live Resource Status</h2>
+            <div class="resource-display">
+                <div class="resource-item" id="metalResource">
+                    <div class="generation-indicator" id="metalGenIndicator">+0/sec</div>
+                    <div class="resource-icon">🔩</div>
+                    <div class="resource-count" id="metalCount">0</div>
+                    <div class="resource-name">Metal</div>
+                </div>
+                <div class="resource-item">
+                    <div class="resource-icon">🌲</div>
+                    <div class="resource-count" id="woodCount">0</div>
+                    <div class="resource-name">Wood</div>
+                </div>
+                <div class="resource-item">
+                    <div class="resource-icon">💧</div>
+                    <div class="resource-count" id="waterCount">0</div>
+                    <div class="resource-name">Water</div>
+                </div>
+                <div class="resource-item">
+                    <div class="resource-icon">⚙️</div>
+                    <div class="resource-count" id="ironCount">0</div>
+                    <div class="resource-name">Iron</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/resource-state.js"></script>
+    <script>
+        let totalMetalGenerated = parseInt(sessionStorage.getItem('sc_total_metal_generated') || '0', 10);
+
+        // Initialize tool page
+        window.onload = function() {
+            ResourceState.load();
+            updateAllDisplays();
+            
+            // Start resource generation and updates
+            setInterval(() => {
+                generateResources();
+                updateResourceCounts();
+                updateGenerationIndicator();
+            }, 1000);
+            
+            console.log('🔩 Metal Extractor tool page loaded!');
+        }
+
+        // Generate resources from tools
+        function generateResources() {
+            const metalTool = ResourceState.tools.metal;
+            if (metalTool.level > 0) {
+                const generation = metalTool.level * 2;
+                const oldAmount = ResourceState.resources.metal;
+                ResourceState.resources.metal += generation;
+                totalMetalGenerated += generation;
+                sessionStorage.setItem('sc_total_metal_generated', totalMetalGenerated.toString());
+                
+                // Show floating animation for metal generation
+                if (generation > 0) {
+                    showFloatingText(`+${generation}`, 'metalResource');
+                }
+                
+                ResourceState.save();
+                console.log(`🏭 Metal tool generated ${generation} metal (${oldAmount} → ${ResourceState.resources.metal})`);
+            }
+        }
+
+        // Update all displays
+        function updateAllDisplays() {
+            updateToolStats();
+            updateUpgradePreview();
+            updateResourceCounts();
+            updateGenerationIndicator();
+        }
+
+        // Update tool statistics
+        function updateToolStats() {
+            const toolStats = ResourceState.getToolStats('metal');
+            const toolInfo = ResourceState.getToolInfo('metal');
+            
+            document.getElementById('currentLevel').textContent = toolInfo.level;
+            document.getElementById('generationRate').textContent = toolInfo.generationRate;
+            document.getElementById('totalGenerated').textContent = totalMetalGenerated;
+            
+            if (toolStats && toolStats.totalInvested.total > 0) {
+                const efficiency = Math.round((toolInfo.generationRate / toolStats.totalInvested.total) * 100);
+                document.getElementById('efficiency').textContent = efficiency + '%';
+            } else {
+                document.getElementById('efficiency').textContent = '0%';
+            }
+        }
+
+        // Update upgrade preview
+        function updateUpgradePreview() {
+            const preview = ResourceState.getUpgradePreview('metal');
+            if (!preview) return;
+
+            document.getElementById('currentLevelDisplay').textContent = preview.currentLevel;
+            document.getElementById('nextLevelDisplay').textContent = preview.nextLevel;
+            document.getElementById('currentGenDisplay').textContent = `${preview.currentGeneration} metal/sec`;
+            document.getElementById('nextGenDisplay').textContent = `${preview.nextGeneration} metal/sec`;
+
+            // Update cost breakdown
+            const costContainer = document.getElementById('costBreakdown');
+            costContainer.innerHTML = '';
+
+            const costIcons = { wood: '🌲', water: '💧', metal: '🔩' };
+            
+            Object.entries(preview.costs).forEach(([resource, cost]) => {
+                const hasEnough = ResourceState.resources[resource] >= cost;
+                const costItem = document.createElement('div');
+                costItem.className = `cost-item ${hasEnough ? '' : 'insufficient'}`;
+                
+                costItem.innerHTML = `
+                    <div class="cost-icon">${costIcons[resource] || '❓'}</div>
+                    <div class="cost-amount">${cost}</div>
+                    <div class="cost-label">${resource.toUpperCase()}</div>
+                    <div class="cost-label">Have: ${ResourceState.resources[resource]}</div>
+                `;
+                
+                costContainer.appendChild(costItem);
+            });
+
+            // Update upgrade button
+            const upgradeBtn = document.getElementById('upgradeBtn');
+            if (preview.canAfford) {
+                upgradeBtn.disabled = false;
+                upgradeBtn.textContent = `🔧 Upgrade to Level ${preview.nextLevel}`;
+            } else {
+                upgradeBtn.disabled = true;
+                upgradeBtn.textContent = '❌ Insufficient Resources';
+            }
+        }
+
+        // Update resource counts
+        function updateResourceCounts() {
+            document.getElementById('metalCount').textContent = ResourceState.resources.metal;
+            document.getElementById('woodCount').textContent = ResourceState.resources.wood;
+            document.getElementById('waterCount').textContent = ResourceState.resources.water;
+            document.getElementById('ironCount').textContent = ResourceState.resources.iron;
+        }
+
+        // Update generation indicator
+        function updateGenerationIndicator() {
+            const generationRate = ResourceState.tools.metal.level * 2;
+            document.getElementById('metalGenIndicator').textContent = `+${generationRate}/sec`;
+        }
+
+        // Upgrade tool
+        function upgradeTool() {
+            const result = ResourceState.buyTool('metal');
+            
+            if (result.success) {
+                showNotification(`✅ ${result.message}`);
+                updateAllDisplays();
+            } else {
+                showNotification(`❌ ${result.message}`, 'error');
+            }
+        }
+
+        // Show floating text animation
+        function showFloatingText(text, elementId) {
+            const element = document.getElementById(elementId);
+            const rect = element.getBoundingClientRect();
+            
+            const floatingText = document.createElement('div');
+            floatingText.className = 'floating-animation';
+            floatingText.textContent = text;
+            floatingText.style.position = 'fixed';
+            floatingText.style.left = (rect.left + rect.width / 2) + 'px';
+            floatingText.style.top = (rect.top + rect.height / 2) + 'px';
+            
+            document.body.appendChild(floatingText);
+            
+            setTimeout(() => {
+                if (floatingText.parentNode) {
+                    floatingText.remove();
+                }
+            }, 2000);
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'launch-notification';
+            
+            if (type === 'error') {
+                notification.style.borderColor = '#ff4444';
+                notification.style.color = '#ff4444';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // Navigation
+        function goBackToResources() {
+            window.location.href = 'resources.html';
+        }
+    </script>
+</body>
+</html>

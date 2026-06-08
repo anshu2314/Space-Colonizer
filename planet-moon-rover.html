@@ -1,0 +1,2386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar Rover Sandbox — Space Colonizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #66fcf1;
+            --accent-glow: rgba(102, 252, 241, 0.4);
+            --bg: #020b18;
+            --panel: rgba(6, 18, 36, 0.9);
+            --border: rgba(102, 252, 241, 0.25);
+            --danger: #ff4757;
+            --success: #2ed573;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--bg);
+            color: #fff;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen-container {
+            position: relative;
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        #explorationCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1b2029 0%, #0c0f14 80%);
+        }
+
+        /* ── INTERFACE OVERLAYS ── */
+        .hud-panel {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Topbar Controls */
+        .topbar {
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .topbar-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, var(--accent), #45a29e);
+            border: none;
+            color: #000;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        /* Telemetry data box */
+        .telemetry-box {
+            display: flex;
+            gap: 20px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85em;
+            color: var(--accent);
+        }
+
+        .tel-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tel-label {
+            font-size: 0.7em;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        /* Tactical Mini Map */
+        .minimap-container {
+            top: 20px;
+            right: 20px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+
+        #minimapCanvas {
+            width: 150px;
+            height: 150px;
+            background: rgba(6, 18, 36, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .map-toggle-btn {
+            background: rgba(102, 252, 241, 0.1);
+            border: 1px solid var(--border);
+            color: var(--accent);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 0.72em;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: 'Orbitron', monospace;
+            transition: all 0.2s;
+        }
+
+        .map-toggle-btn:hover {
+            background: rgba(102, 252, 241, 0.25);
+        }
+
+        /* Bottom Radio / Chat Section */
+        .radio-comms-panel {
+            bottom: 20px;
+            left: 20px;
+            width: 320px;
+            pointer-events: auto;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+        }
+
+        .radio-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.8em;
+            color: var(--accent);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .radio-log {
+            height: 120px;
+            overflow-y: auto;
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.75);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+            padding-right: 4px;
+        }
+
+        .radio-log::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .radio-log::-webkit-scrollbar-thumb {
+            background-color: var(--accent);
+            border-radius: 2px;
+        }
+
+        .radio-msg {
+            line-height: 1.3;
+        }
+
+        .radio-sender {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .radio-input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .radio-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 10px;
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9em;
+            outline: none;
+        }
+
+        .radio-input:focus {
+            border-color: var(--accent);
+        }
+
+        .radio-send-btn {
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            padding: 0 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Rajdhani', sans-serif;
+        }
+
+        /* Context Prompts (like E to scan, F to plant flag) */
+        .context-prompt {
+            position: absolute;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            background: rgba(6, 18, 36, 0.95);
+            border: 2px solid var(--accent);
+            border-radius: 25px;
+            padding: 10px 24px;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 0 25px var(--accent-glow);
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px var(--accent-glow); }
+            50% { box-shadow: 0 0 30px var(--accent-glow); }
+        }
+
+        .context-prompt strong {
+            background: var(--accent);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            font-size: 0.95em;
+        }
+
+        /* Full-screen tactical navigation grid */
+        .overlay-fullscreen {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 11, 24, 0.94);
+            z-index: 500;
+            display: none;
+            flex-direction: column;
+            padding: 40px;
+        }
+
+        .overlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .overlay-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6em;
+            color: var(--accent);
+        }
+
+        .overlay-close {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .overlay-close:hover {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .tactical-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .tactical-map-viewport {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(6, 18, 36, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #tacticalLargeCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .legend-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* ── CUSTOM NAME MODAL POPUP ── */
+        .name-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .name-modal {
+            background: var(--panel);
+            border: 2px solid var(--accent);
+            border-radius: 18px;
+            padding: 30px;
+            width: 420px;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px var(--accent-glow);
+            animation: modal-zoom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes modal-zoom {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .name-modal-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4em;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .name-modal-sub {
+            font-size: 0.88em;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .name-modal-input {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            font-size: 1em;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .name-modal-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .name-modal-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent), #45a29e);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            padding: 12px;
+            font-weight: 700;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .name-modal-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+    </style>
+</head>
+<body>
+
+<div class="screen-container">
+    <canvas id="explorationCanvas"></canvas>
+
+    <!-- TOPBAR HUD -->
+    <div class="hud-panel topbar">
+        <button class="btn-back" onclick="goBack()">← Base View</button>
+        <div class="topbar-card telemetry-box">
+            <div class="tel-item"><span class="tel-label">X Coords</span><span id="telX">0.0</span></div>
+            <div class="tel-item"><span class="tel-label">Y Coords</span><span id="telY">0.0</span></div>
+            <div class="tel-item"><span class="tel-label">Linear Speed</span><span id="telSpeed">0.0 m/s</span></div>
+            <div class="tel-item"><span class="tel-label">Battery</span><span id="telBattery" style="color:#00ff88">100%</span></div>
+            <div class="tel-item"><span class="tel-label">Cargo Capacity</span><span id="telCargo">0 / 100</span></div>
+        </div>
+    </div>
+
+    <!-- RADAR MINIMAP HUD -->
+    <div class="hud-panel minimap-container">
+        <canvas id="minimapCanvas"></canvas>
+        <button class="map-toggle-btn" onclick="toggleTacticalOverlay()">🌐 Tactical Map [M]</button>
+    </div>
+
+    <!-- BOTTOM RADIO HUD -->
+    <div class="hud-panel radio-comms-panel">
+        <div class="radio-title">
+            <span>📡 COMM CHANNEL</span>
+            <span style="font-size:0.8em;color:#00ff88" id="connectionStatus">● ONLINE</span>
+        </div>
+        <div class="radio-log" id="radioLog">
+            <div class="radio-msg"><span class="radio-sender">[SYSTEM]</span> Connected to global radio room. Welcome, Astronaut!</div>
+        </div>
+        <div class="radio-input-row">
+            <input type="text" class="radio-input" id="radioInput" placeholder="Send transmission..." autocomplete="off">
+            <button class="radio-send-btn" onclick="sendRadioMessage()">SEND</button>
+        </div>
+    </div>
+
+    <!-- CONTEXT PROMPT FOR ACTIONS -->
+    <div class="context-prompt" id="actionPrompt">
+        <strong>E</strong> Scan Helium-3 Node
+    </div>
+</div>
+
+<!-- FULLSCREEN TACTICAL OVERLAY -->
+<div class="overlay-fullscreen" id="tacticalOverlay">
+    <div class="overlay-header">
+        <div class="overlay-title">TACTICAL NAVIGATION GRID & COORDINATES</div>
+        <button class="overlay-close" onclick="toggleTacticalOverlay()">×</button>
+    </div>
+    <div class="tactical-grid-layout">
+        <div class="tactical-map-viewport">
+            <canvas id="tacticalLargeCanvas"></canvas>
+        </div>
+        <div class="legend-panel">
+            <h3 style="font-family:'Orbitron',monospace;font-size:1em;color:var(--accent);border-bottom:1px solid var(--border);padding-bottom:8px">MAP LEGEND</h3>
+            <div style="font-size:0.88em;line-height:1.6;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#ffd700;display:inline-block"></span>
+                    <span>Your Rover</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#66fcf1;display:inline-block"></span>
+                    <span>Other Active Rovers (Online)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.45);display:inline-block"></span>
+                    <span>Ghost Rovers (Offline)</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:14px;height:14px;border:1px dashed #66fcf1;background:rgba(102,252,241,0.15);display:inline-block"></span>
+                    <span>Landing Recovery Pads</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="width:12px;height:12px;border-radius:50%;background:#ff4757;display:inline-block"></span>
+                    <span>Unexplored Craters</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:1.1em">🚩</span>
+                    <span>Planted Flags</span>
+                </div>
+            </div>
+            <div style="margin-top:auto;padding:12px;border:1px solid rgba(255,71,87,0.3);border-radius:8px;background:rgba(255,71,87,0.05);font-size:0.82em;line-height:1.4;color:rgba(255,255,255,0.6)">
+                ⚠️ <strong style="color:#fff">DRIVE SAFELY:</strong> Traversing crater boundaries causes suspension stress. Collisions with large rock fields will deflect your momentum.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ASTRONAUT NAME CONFIG MODAL -->
+<div class="name-modal-overlay" id="nameModal">
+    <div class="name-modal">
+        <div class="name-modal-title">MISSION PILOT REGISTRY</div>
+        <div class="name-modal-sub">Register your astronaut identifier with the lunar navigation network to sync telemetry and chat with other players.</div>
+        <input type="text" class="name-modal-input" id="pilotNameInput" placeholder="ASTRONAUT NAME" maxlength="15" value="Commander">
+        <button class="name-modal-btn" onclick="registerPilotName()">LAUNCH LUNAR ROVER</button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="js/resource-state.js"></script>
+<!-- Include MQTT library for global WebSocket-based P2P rooms -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+<script>
+    // ── GAME STATE & CONFIG ──
+    const MAP_SIZE = 3000; // 3000x3000px sandbox grid
+    let astronautName = localStorage.getItem('sc_astro_name') || '';
+    let clientId = 'rover_' + Math.random().toString(36).substr(2, 9);
+    
+    // Main canvasses
+    const mainCanvas = document.getElementById('explorationCanvas');
+    const mainCtx = mainCanvas.getContext('2d');
+    const mapCanvas = document.getElementById('minimapCanvas');
+    const mapCtx = mapCanvas.getContext('2d');
+    const largeMapCanvas = document.getElementById('tacticalLargeCanvas');
+    const largeMapCtx = largeMapCanvas.getContext('2d');
+
+    // Controls
+    const keys = {};
+    window.addEventListener('keydown', e => {
+        keys[e.code] = true;
+        if (e.code === 'KeyM') toggleTacticalOverlay();
+        if (['Space', 'ArrowUp', 'ArrowDown', 'KeyE', 'KeyF'].includes(e.code) && !document.activeElement.classList.contains('radio-input')) {
+            e.preventDefault();
+        }
+    });
+    window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    // Rover entity definition
+    const rover = {
+        x: 1500, y: 1500, // Starts at map center
+        vx: 0, vy: 0,
+        angle: -Math.PI / 2, // facing north
+        speed: 0,
+        battery: 100,
+        cargo: 0,
+        maxCargo: 100,
+        deployTimer: 2.5, // 2.5s deployment anim
+        
+        // True vehicle dynamics coefficients
+        accelForce: 180, // px/s^2
+        turnSpeed: 2.6, // rad/s turning speed
+        rollingFriction: 0.85, // slows forward speed
+        lateralGrip: 4.8, // low lateral grip -> beautiful low friction lunar sliding!
+        suspensionBounce: 0,
+        bounceTimer: 0
+    };
+
+    // Environmental elements
+    let craters = [
+        { x: 1500, y: 1200, r: 90, name: 'Crater Kepler-C' },
+        { x: 1300, y: 1700, r: 110, name: 'Crater Cassini-M' },
+        { x: 1680, y: 1550, r: 75, name: 'Crater Shackleton' },
+        { x: 600, y: 1300, r: 120, name: 'Crater Apollo-A' },
+        { x: 2300, y: 1300, r: 140, name: 'Crater Clavius-G' },
+        { x: 1100, y: 1100, r: 200, name: 'Crater Tycho' },
+        { x: 1900, y: 1900, r: 220, name: 'Crater Copernicus' },
+        
+        // Minor/medium scattered craters
+        { x: 400, y: 400, r: 80, name: 'Crater Lade' },
+        { x: 800, y: 600, r: 70, name: 'Crater Silberschlag' },
+        { x: 2400, y: 500, r: 95, name: 'Crater Langrenus' },
+        { x: 2800, y: 1000, r: 110, name: 'Crater Petavius' },
+        { x: 500, y: 2200, r: 100, name: 'Crater Grimaldi' },
+        { x: 900, y: 2600, r: 85, name: 'Crater Adams-D' },
+        { x: 2000, y: 2600, r: 90, name: 'Crater Theophilus' },
+        { x: 2500, y: 2100, r: 80, name: 'Crater Cyrillus' },
+        
+        // Small craters for density
+        { x: 1400, y: 1420, r: 40, name: 'Craterlet A' },
+        { x: 1580, y: 1380, r: 35, name: 'Craterlet B' },
+        { x: 1050, y: 1600, r: 50, name: 'Craterlet C' },
+        { x: 1850, y: 1450, r: 45, name: 'Craterlet D' },
+        { x: 2100, y: 1650, r: 55, name: 'Craterlet E' },
+        { x: 750, y: 1600, r: 45, name: 'Craterlet F' }
+    ];
+
+    let rocks = [
+        { x: 900, y: 700, r: 18 }, { x: 930, y: 720, r: 22 }, { x: 500, y: 1100, r: 25 },
+        { x: 1600, y: 900, r: 15 }, { x: 1750, y: 1400, r: 24 }, { x: 1400, y: 2200, r: 28 },
+        { x: 2500, y: 1700, r: 20 }, { x: 2200, y: 600, r: 16 }, { x: 1100, y: 1200, r: 30 }
+    ];
+
+    let minerals = [
+        { x: 700, y: 600, r: 35, type: 'Helium-3', amount: 80, scanned: false },
+        { x: 2200, y: 900, r: 35, type: 'Titanium Vein', amount: 150, scanned: false },
+        { x: 1100, y: 2000, r: 40, type: 'Helium-3', amount: 100, scanned: false },
+        { x: 1800, y: 2300, r: 35, type: 'Helium-3', amount: 90, scanned: false },
+        { x: 900, y: 2500, r: 35, type: 'Titanium Vein', amount: 120, scanned: false }
+    ];
+
+    let landingPads = [
+        { x: 660, y: 1500, name: 'LANDER SITE ALPHA' },
+        { x: 1500, y: 1500, name: 'LANDER SITE BETA' },
+        { x: 2340, y: 1500, name: 'LANDER SITE GAMMA' }
+    ];
+
+    // Local flags list
+    let flags = [
+        { x: 1460, y: 1540, name: 'Mission Control', text: 'Established Apollo Landing Site' }
+    ];
+
+    // Other players tracking (Live players + offline ghosts)
+    let onlinePlayers = {};
+    let ghostPlayers = []; // Loaded from local storage + serverless database
+
+    // Surface textured details
+    let tracks = [];
+    let bgCanvas = null;
+    let bgCtx = null;
+
+    function initSurfaceDetails() {
+        // Create offscreen canvas for cached background
+        bgCanvas = document.createElement('canvas');
+        bgCanvas.width = MAP_SIZE;
+        bgCanvas.height = MAP_SIZE;
+        bgCtx = bgCanvas.getContext('2d');
+
+        // 1. Fill base Moon Regolith light grey
+        bgCtx.fillStyle = '#a6acb2'; // dusty lunar grey
+        bgCtx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+        // 2. Generate geological highlands maria (dark/light basalt patches)
+        for (let i = 0; i < 45; i++) {
+            const hx = Math.random() * MAP_SIZE;
+            const hy = Math.random() * MAP_SIZE;
+            const hr = 200 + Math.random() * 500;
+            const hColor = Math.random() < 0.55 ? 'rgba(255, 255, 255, 0.14)' : 'rgba(40, 45, 55, 0.12)';
+            
+            const grad = bgCtx.createRadialGradient(hx, hy, 0, hx, hy, hr);
+            grad.addColorStop(0, hColor);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            bgCtx.fillStyle = grad;
+            bgCtx.beginPath(); bgCtx.arc(hx, hy, hr, 0, Math.PI * 2); bgCtx.fill();
+        }
+
+        // 3. Draw millions of fine white/dark regolith dust grains (grainy texture)
+        // Draw 18000 micro dust speckles for extremely high-fidelity texture
+        for (let i = 0; i < 18000; i++) {
+            const x = Math.random() * MAP_SIZE;
+            const y = Math.random() * MAP_SIZE;
+            const size = Math.random() * 1.5 + 0.5;
+            const alpha = 0.08 + Math.random() * 0.18;
+            bgCtx.fillStyle = Math.random() < 0.5 ? `rgba(255, 255, 255, ${alpha})` : `rgba(0, 0, 0, ${alpha * 0.75})`;
+            bgCtx.fillRect(x, y, size, size);
+        }
+
+        // 4. Draw micro-craterlets (tiny meteor impact pits)
+        for (let i = 0; i < 150; i++) {
+            const cx = Math.random() * MAP_SIZE;
+            const cy = Math.random() * MAP_SIZE;
+            const cr = Math.random() * 7 + 3;
+            const darkness = 0.1 + Math.random() * 0.16;
+
+            // Bowl shadow
+            bgCtx.fillStyle = `rgba(35, 40, 50, ${darkness})`;
+            bgCtx.beginPath(); bgCtx.arc(cx, cy, cr, 0, Math.PI * 2); bgCtx.fill();
+            // Rim highlight
+            bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            bgCtx.lineWidth = 0.8;
+            bgCtx.beginPath(); bgCtx.arc(cx + 0.8, cy + 0.8, cr, 0, Math.PI * 2); bgCtx.stroke();
+        }
+
+        // 5. Draw large crater ejecta blankets (splatter rays around crater coordinates)
+        // This makes craters look integrated into the geology!
+        craters.forEach(crater => {
+            // Ejecta blanket halo
+            const haloGrad = bgCtx.createRadialGradient(crater.x, crater.y, crater.r * 0.9, crater.x, crater.y, crater.r * 1.6);
+            haloGrad.addColorStop(0, 'rgba(255, 255, 255, 0.14)'); // bright ejecta
+            haloGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+            haloGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            bgCtx.fillStyle = haloGrad;
+            bgCtx.beginPath(); bgCtx.arc(crater.x, crater.y, crater.r * 1.6, 0, Math.PI * 2); bgCtx.fill();
+
+            // Ejecta rays (splashes)
+            bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.09)';
+            bgCtx.lineWidth = 1.2;
+            const raysCount = 18;
+            for (let r = 0; r < raysCount; r++) {
+                const rayAngle = (r / raysCount) * Math.PI * 2 + (crater.x * 0.007);
+                const startDist = crater.r * 0.95;
+                const endDist = crater.r * (1.4 + (Math.sin(r + crater.y) * 0.5));
+                bgCtx.beginPath();
+                bgCtx.moveTo(crater.x + Math.cos(rayAngle) * startDist, crater.y + Math.sin(rayAngle) * startDist);
+                bgCtx.lineTo(crater.x + Math.cos(rayAngle) * endDist, crater.y + Math.sin(rayAngle) * endDist);
+                bgCtx.stroke();
+            }
+        });
+    }
+
+    // Mock local bot players for offline fallback/fullness (Disabled as requested)
+    let botPlayers = [];
+
+    // Historical defaults for ghosts if db is offline
+    const defaultGhosts = [];
+
+    // Names of mock bots to exclude from DB/Local storage load
+    const MOCK_BOT_NAMES = ['Yuri_Gagarin', 'Sally_Ride', 'Astro_Buzz', 'Commander_Neil', 'Astro_Collins'];
+
+    // ── MULTIPLAYER SYSTEM CONNECTIVITY (MQTT + SERVERLESS KVDB) ──
+    let mqttClient = null;
+    const MQTT_BROKER = 'wss://broker.emqx.io:8084/mqtt';
+    const MQTT_TOPIC = 'sc_moon_rover/room_alpha';
+    const KVDB_ENDPOINT = 'https://kvdb.io/K35Z72T2wN5tF8g1A8q5zX/ghosts';
+
+    function initMultiplayer() {
+        // Load ghosts from local storage merge first
+        loadGhostRoversLocal();
+
+        // Connect to MQTT Broker
+        try {
+            console.log('📡 Connecting to MQTT Relay:', MQTT_BROKER);
+            mqttClient = mqtt.connect(MQTT_BROKER, {
+                clientId: clientId,
+                keepalive: 60,
+                clean: true
+            });
+
+            mqttClient.on('connect', () => {
+                document.getElementById('connectionStatus').textContent = '● SYNCED';
+                document.getElementById('connectionStatus').style.color = '#00ff88';
+                console.log('✔ Connected to MQTT public relay room!');
+                
+                // Subscribe to channels
+                mqttClient.subscribe(MQTT_TOPIC + '/players/#');
+                mqttClient.subscribe(MQTT_TOPIC + '/chat');
+                mqttClient.subscribe(MQTT_TOPIC + '/flags');
+
+                // Broadcast join message
+                publishRadioMessage(`${astronautName} entered lunar sandbox.`);
+                broadcastPosition();
+            });
+
+            mqttClient.on('message', (topic, message) => {
+                try {
+                    const data = JSON.parse(message.toString());
+                    
+                    if (topic.startsWith(MQTT_TOPIC + '/players/')) {
+                        const pId = topic.substring((MQTT_TOPIC + '/players/').length);
+                        if (pId === clientId) return; // ignore self
+                        
+                        if (data.state === 'online') {
+                            onlinePlayers[pId] = data;
+                        } else if (data.state === 'offline') {
+                            // Convert player to ghost and save
+                            delete onlinePlayers[pId];
+                            addGhostVehicle(data);
+                        }
+                    } else if (topic === MQTT_TOPIC + '/chat') {
+                        addRadioLog(data.name, data.message);
+                    } else if (topic === MQTT_TOPIC + '/flags') {
+                        if (!flags.some(f => f.x === data.x && f.y === data.y)) {
+                            flags.push(data);
+                            addRadioLog('SYSTEM', `New flag planted by ${data.name} at coordinates [${Math.round(data.x)}, ${Math.round(data.y)}]`);
+                        }
+                    }
+                } catch (err) { console.error('Error handling sync message:', err); }
+            });
+
+            mqttClient.on('error', (err) => {
+                console.warn('MQTT error:', err);
+                fallbackToOfflineHUD();
+            });
+
+            mqttClient.on('close', () => {
+                fallbackToOfflineHUD();
+            });
+
+        } catch (e) {
+            console.warn('Failed to start MQTT broker client:', e);
+            fallbackToOfflineHUD();
+        }
+
+        // Load ghosts from public key-value store database
+        fetchGhostDatabase();
+    }
+
+    function fallbackToOfflineHUD() {
+        const el = document.getElementById('connectionStatus');
+        if (el) {
+            el.textContent = '● LOCAL SIM';
+            el.style.color = '#ffd700';
+        }
+    }
+
+    // ── DATABASE PERSISTENCE FOR OFFLINE GHOSTS ──
+    async function fetchGhostDatabase() {
+        try {
+            const res = await fetch(KVDB_ENDPOINT);
+            if (res.ok) {
+                const cloudGhosts = await res.json();
+                if (Array.isArray(cloudGhosts) && cloudGhosts.length > 0) {
+                    ghostPlayers = cloudGhosts.filter(g => !MOCK_BOT_NAMES.includes(g.name));
+                    saveGhostRoversLocal();
+                    pushGhostDatabase(); // Overwrite remote database with cleaned list
+                    console.log('📂 Retrieved serverless ghost data:', ghostPlayers.length, 'ghosts');
+                    return;
+                }
+            }
+        } catch(e) {
+            console.warn('Serverless DB endpoint offline, using local merge database.');
+        }
+        
+        // Merge defaults if no ghosts saved yet
+        if (ghostPlayers.length === 0) {
+            ghostPlayers = [...defaultGhosts];
+            saveGhostRoversLocal();
+        }
+    }
+
+    async function pushGhostDatabase() {
+        try {
+            ghostPlayers = ghostPlayers.filter(g => !MOCK_BOT_NAMES.includes(g.name));
+            await fetch(KVDB_ENDPOINT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(ghostPlayers)
+            });
+            console.log('✔ Pushed updated ghost list to serverless DB.');
+        } catch(e) {
+            console.warn('Could not sync ghosts list to serverless cloud.');
+        }
+    }
+
+    function addGhostVehicle(data) {
+        if (MOCK_BOT_NAMES.includes(data.name)) return; // Exclude mock bot names
+        if (!ghostPlayers.some(g => g.name === data.name)) {
+            ghostPlayers.push({
+                name: data.name,
+                x: data.x, y: data.y,
+                angle: data.angle,
+                landerX: data.landerX || 1500,
+                landerY: data.landerY || 1500,
+                state: 'offline',
+                ts: Date.now()
+            });
+            // Cap to max 25 ghosts to save bandwidth
+            if (ghostPlayers.length > 25) ghostPlayers.shift();
+            
+            saveGhostRoversLocal();
+            pushGhostDatabase();
+        }
+    }
+
+    function saveGhostRoversLocal() {
+        ghostPlayers = ghostPlayers.filter(g => !MOCK_BOT_NAMES.includes(g.name));
+        localStorage.setItem('sc_rover_ghosts', JSON.stringify(ghostPlayers));
+    }
+
+    function loadGhostRoversLocal() {
+        const local = localStorage.getItem('sc_rover_ghosts');
+        if (local) {
+            try {
+                const loaded = JSON.parse(local);
+                if (Array.isArray(loaded)) {
+                    ghostPlayers = loaded.filter(g => !MOCK_BOT_NAMES.includes(g.name));
+                } else {
+                    ghostPlayers = [];
+                }
+            } catch (e) { ghostPlayers = []; }
+        }
+    }
+
+    function broadcastPosition() {
+        if (!mqttClient || !mqttClient.connected) return;
+        const payload = {
+            name: astronautName,
+            x: rover.x,
+            y: rover.y,
+            angle: rover.angle,
+            speed: rover.speed,
+            landerX: 1500,
+            landerY: 1500,
+            state: 'online',
+            ts: Date.now()
+        };
+        mqttClient.publish(MQTT_TOPIC + '/players/' + clientId, JSON.stringify(payload));
+    }
+
+    function broadcastOffline() {
+        if (!mqttClient || !mqttClient.connected) return;
+        const payload = {
+            name: astronautName,
+            x: rover.x,
+            y: rover.y,
+            angle: rover.angle,
+            landerX: 1500,
+            landerY: 1500,
+            state: 'offline',
+            ts: Date.now()
+        };
+        mqttClient.publish(MQTT_TOPIC + '/players/' + clientId, JSON.stringify(payload));
+    }
+
+    // ── GAME INITIATION ──
+    function registerPilotName() {
+        const input = document.getElementById('pilotNameInput').value.trim();
+        if (!input) return;
+        astronautName = input;
+        localStorage.setItem('sc_astro_name', astronautName);
+        document.getElementById('nameModal').style.display = 'none';
+
+        // Load resource values and configure
+        initMultiplayer();
+        
+        // Start animation loop
+        lastTime = performance.now();
+        requestAnimationFrame(updateLoop);
+
+        // Add multiplayer guidelines tip in Comms HUD
+        addRadioLog('SYSTEM', '📡 MULTIPLAYER NETWORK CONNECTED. Open multiple windows/tabs of this game under different pilot names to test live synchronization.');
+    }
+
+    window.onload = function() {
+        // Load resource values
+        if (typeof ResourceState !== 'undefined') {
+            ResourceState.load();
+            // Generate resources from tools in background while in rover sandbox
+            setInterval(() => {
+                ResourceState.tickTools();
+            }, 1000);
+        }
+        
+        // Pre-generate surface texture details
+        initSurfaceDetails();
+        
+        // Check if name is already registered
+        if (astronautName) {
+            document.getElementById('pilotNameInput').value = astronautName;
+        }
+    };
+
+    function goBack() {
+        broadcastOffline();
+        window.location.href = 'planet-moon.html';
+    }
+
+    // ── ROVER PHYSICS & MOVEMENT ENGINE ──
+    let lastTime = 0;
+    
+    function updateLoop(ts) {
+        const dt = Math.min((ts - lastTime) / 1000, 0.1);
+        lastTime = ts;
+
+        // Perform updates
+        updatePhysics(dt);
+        updateBots(dt);
+        renderScene(dt);
+        renderMinimap();
+        renderTacticalLargeMap();
+
+        requestAnimationFrame(updateLoop);
+    }
+
+    function addTireTrack(x1, y1, x2, y2, angle) {
+        const trackSpacing = 11;
+        const dx = -Math.sin(angle) * trackSpacing;
+        const dy = Math.cos(angle) * trackSpacing;
+        tracks.push({
+            lx1: x1 - dx, ly1: y1 - dy, lx2: x2 - dx, ly2: y2 - dy,
+            rx1: x1 + dx, ry1: y1 + dy, rx2: x2 + dx, ry2: y2 + dy,
+            life: 1.0
+        });
+        if (tracks.length > 1000) tracks.shift();
+    }
+
+    function showNotif(msg) {
+        const toast = document.createElement('div');
+        toast.style.position = 'fixed';
+        toast.style.bottom = '160px';
+        toast.style.right = '20px';
+        toast.style.backgroundColor = 'rgba(6, 18, 36, 0.95)';
+        toast.style.border = '1px solid var(--accent)';
+        toast.style.color = '#fff';
+        toast.style.padding = '10px 20px';
+        toast.style.borderRadius = '8px';
+        toast.style.fontFamily = 'Orbitron, monospace';
+        toast.style.fontSize = '0.85em';
+        toast.style.zIndex = '1000';
+        toast.style.boxShadow = '0 0 15px var(--accent-glow)';
+        toast.textContent = msg;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.transition = 'opacity 0.5s';
+            toast.style.opacity = '0';
+            setTimeout(() => { toast.remove(); }, 500);
+        }, 3000);
+    }
+
+    function updatePhysics(dt) {
+        // Handle deployment animation timer
+        if (rover.deployTimer > 0) {
+            rover.deployTimer = Math.max(0, rover.deployTimer - dt);
+            // Roll rover forward out of the center lander module (from y=1500 down to y=1548)
+            const progress = (2.5 - rover.deployTimer) / 2.5;
+            rover.x = 1500;
+            rover.y = 1500 + progress * 48;
+            rover.angle = Math.PI / 2; // facing down (south)
+            
+            // Spawn deployment dust puffs
+            if (Math.random() < 0.45) {
+                spawnParticle(rover.x + (Math.random()-0.5)*16, rover.y - 12,
+                    (Math.random()-0.5)*12, -Math.random()*15, 0.6, 'rgba(150, 150, 150, 0.4)', 2.5 + Math.random()*2.5);
+            }
+            return; // skip input checks during deployment
+        }
+
+        // Disable keyboard driving checks when typing in chat input
+        const typing = document.activeElement === document.getElementById('radioInput');
+        
+        // 1. Steering calculations
+        let steer = 0;
+        if (!typing) {
+            if (keys['KeyA'] || keys['ArrowLeft']) steer = -1;
+            if (keys['KeyD'] || keys['ArrowRight']) steer = 1;
+        }
+
+        // Steering ability scales down at extremely slow speeds
+        rover.angle += steer * rover.turnSpeed * dt;
+
+        // 2. Engine Force acceleration & Thruster Boost (Spacebar)
+        let force = 0;
+        if (!typing) {
+            if (keys['KeyW'] || keys['ArrowUp']) force = rover.accelForce;
+            if (keys['KeyS'] || keys['ArrowDown']) force = -rover.accelForce * 0.55; // Reverse speed is slower
+        }
+
+        // Spacebar thruster boost
+        let boostForce = 0;
+        let thrusterActive = false;
+        if (!typing && keys['Space'] && rover.battery > 5) {
+            thrusterActive = true;
+            boostForce = rover.accelForce * 1.5;
+            rover.battery = Math.max(0, rover.battery - dt * 9.5); // drains battery fast
+            
+            // Spawn fire exhaust particles
+            const backX = rover.x - Math.cos(rover.angle) * 16;
+            const backY = rover.y - Math.sin(rover.angle) * 16;
+            for (let i = 0; i < 3; i++) {
+                const flameAngle = rover.angle + Math.PI + (Math.random() - 0.5) * 0.4;
+                const speed = 120 + Math.random() * 80;
+                spawnParticle(
+                    backX, backY,
+                    Math.cos(flameAngle) * speed + rover.vx * 0.4,
+                    Math.sin(flameAngle) * speed + rover.vy * 0.4,
+                    Math.random() * 4 + 2,
+                    Math.random() < 0.35 ? '#ffd700' : 'rgba(0, 191, 255, 0.9)',
+                    0.3 + Math.random() * 0.3
+                );
+            }
+        }
+
+        // Project velocities onto local rover coordinate frame
+        const forwardX = Math.cos(rover.angle);
+        const forwardY = Math.sin(rover.angle);
+        
+        // Forward speed projection
+        const fwdSpeed = rover.vx * forwardX + rover.vy * forwardY;
+        rover.speed = Math.abs(fwdSpeed);
+
+        // Apply engine + boost acceleration along heading angle
+        rover.vx += forwardX * (force + boostForce) * dt;
+        rover.vy += forwardY * (force + boostForce) * dt;
+
+        // Check crater slope gravity influence for engine torque torque reduction (climbing feels heavy)
+        let climbFactor = 0;
+        let climbSlopeStrength = 0;
+        craters.forEach(crater => {
+            const dx = rover.x - crater.x;
+            const dy = rover.y - crater.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < crater.r) {
+                const steepness = Math.sin((1 - dist / crater.r) * Math.PI);
+                const localSlopeStrength = steepness * 22;
+                const slopeAngle = Math.atan2(-dy, -dx);
+                const localClimb = Math.cos(rover.angle - (slopeAngle + Math.PI));
+                if (Math.abs(localClimb) > Math.abs(climbFactor)) {
+                    climbFactor = localClimb;
+                    climbSlopeStrength = localSlopeStrength;
+                }
+            }
+        });
+        if (climbSlopeStrength > 0) {
+            if (force > 0 && climbFactor > 0.1) {
+                force *= (1.0 - climbFactor * 0.35 * (climbSlopeStrength / 22));
+            } else if (force < 0 && climbFactor < -0.1) {
+                force *= (1.0 - Math.abs(climbFactor) * 0.35 * (climbSlopeStrength / 22));
+            }
+        }
+
+        // Lateral speed projection (perpendicular sliding vectors)
+        const lateralX = -Math.sin(rover.angle);
+        const lateralY = Math.cos(rover.angle);
+        const latSpeed = rover.vx * lateralX + rover.vy * lateralY;
+
+        // Apply friction coefficients (clamped to prevent numerical overshooting oscillation jitter)
+        // Forward friction (low rolling friction in vacuum)
+        const fwdFrictionAmount = fwdSpeed * rover.rollingFriction * dt;
+        const finalFwdFriction = Math.abs(fwdFrictionAmount) > Math.abs(fwdSpeed) ? fwdSpeed : fwdFrictionAmount;
+        rover.vx -= forwardX * finalFwdFriction;
+        rover.vy -= forwardY * finalFwdFriction;
+
+        // Lateral friction (sideways tire traction) - low value means rover drifts easily!
+        const latFrictionAmount = latSpeed * rover.lateralGrip * dt;
+        const finalLatFriction = Math.abs(latFrictionAmount) > Math.abs(latSpeed) ? latSpeed : latFrictionAmount;
+        rover.vx -= lateralX * finalLatFriction;
+        rover.vy -= lateralY * finalLatFriction;
+
+        // 3. Crater gravity pulls & slopes (Sine bowl shape steepness)
+        let onCraterEdge = false;
+        let inCrater = false;
+        let activeSlopeStrength = 0;
+        let activeSlopeAngle = 0;
+        craters.forEach(crater => {
+            const dx = rover.x - crater.x;
+            const dy = rover.y - crater.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < crater.r) {
+                inCrater = true;
+                const steepness = Math.sin((1 - dist / crater.r) * Math.PI);
+                const slopeStrength = steepness * 22; // Gravity pull peaks in the middle slope
+                const pullAngle = Math.atan2(-dy, -dx);
+                
+                rover.vx += Math.cos(pullAngle) * slopeStrength * dt;
+                rover.vy += Math.sin(pullAngle) * slopeStrength * dt;
+
+                if (slopeStrength > activeSlopeStrength) {
+                    activeSlopeStrength = slopeStrength;
+                    activeSlopeAngle = pullAngle;
+                }
+
+                // Suspension bouncing triggers near crater edge (rim roughness)
+                if (dist > crater.r - 28) {
+                    onCraterEdge = true;
+                }
+            }
+        });
+
+        // Spawn wheel spin dust particles when actively climbing crater slopes uphill
+        if (inCrater && rover.speed > 1.5 && rover.deployTimer <= 0 && force > 0) {
+            const climbFactor = Math.cos(rover.angle - (activeSlopeAngle + Math.PI));
+            if (climbFactor > 0.15 && Math.random() < 0.28) {
+                const backX = rover.x - Math.cos(rover.angle) * 14;
+                const backY = rover.y - Math.sin(rover.angle) * 14;
+                const leftWheelX = backX - Math.sin(rover.angle) * 14;
+                const leftWheelY = backY + Math.cos(rover.angle) * 14;
+                const rightWheelX = backX + Math.sin(rover.angle) * 14;
+                const rightWheelY = backY - Math.cos(rover.angle) * 14;
+
+                const dustAngle = rover.angle + Math.PI + (Math.random() - 0.5) * 0.3;
+                const dustSpeed = 25 + Math.random() * 30;
+                
+                spawnParticle(
+                    leftWheelX, leftWheelY,
+                    Math.cos(dustAngle) * dustSpeed + rover.vx * 0.2,
+                    Math.sin(dustAngle) * dustSpeed + rover.vy * 0.2,
+                    Math.random() * 3 + 1.5,
+                    'rgba(145, 148, 155, 0.4)',
+                    0.4 + Math.random() * 0.4
+                );
+                spawnParticle(
+                    rightWheelX, rightWheelY,
+                    Math.cos(dustAngle) * dustSpeed + rover.vx * 0.2,
+                    Math.sin(dustAngle) * dustSpeed + rover.vy * 0.2,
+                    Math.random() * 3 + 1.5,
+                    'rgba(145, 148, 155, 0.4)',
+                    0.4 + Math.random() * 0.4
+                );
+            }
+        }
+
+        // Apply suspension bouncing animation when going fast or on rough crater rims (subtle & smooth!)
+        if (onCraterEdge && rover.speed > 5) {
+            rover.bounceTimer += dt * 8.0; // constant gentle speed
+            rover.suspensionBounce = Math.sin(rover.bounceTimer) * 1.2; // max 1.2px bounce
+        } else if (rover.speed > 8) {
+            // normal bumpy ground at high speeds
+            rover.bounceTimer += dt * 5.0;
+            rover.suspensionBounce = Math.sin(rover.bounceTimer) * 0.5; // max 0.5px bounce
+        } else {
+            // decay bounce back to zero frame-rate independently
+            rover.suspensionBounce *= Math.exp(-12 * dt);
+        }
+
+        // Add tire tracks for active moving rover
+        const now = performance.now();
+        if (rover.speed > 1.8 && rover.deployTimer <= 0) {
+            if (!rover.lastTrackTime || now - rover.lastTrackTime > 70) {
+                const prevX = rover.x - rover.vx * dt;
+                const prevY = rover.y - rover.vy * dt;
+                addTireTrack(prevX, prevY, rover.x, rover.y, rover.angle);
+                rover.lastTrackTime = now;
+            }
+        }
+
+        // Decay tracks slowly
+        tracks.forEach(t => {
+            t.life -= 0.08 * dt; // slow fade out
+        });
+        tracks = tracks.filter(t => t.life > 0.02);
+
+        // Update positions
+        rover.x += rover.vx * dt;
+        rover.y += rover.vy * dt;
+
+        // Map Boundaries collision deflection
+        const borderLimit = 40;
+        if (rover.x < borderLimit) { rover.x = borderLimit; rover.vx = -rover.vx * 0.3; }
+        if (rover.x > MAP_SIZE - borderLimit) { rover.x = MAP_SIZE - borderLimit; rover.vx = -rover.vx * 0.3; }
+        if (rover.y < borderLimit) { rover.y = borderLimit; rover.vy = -rover.vy * 0.3; }
+        if (rover.y > MAP_SIZE - borderLimit) { rover.y = MAP_SIZE - borderLimit; rover.vy = -rover.vy * 0.3; }
+
+        // 4. Boulders collision physics
+        rocks.forEach(rock => {
+            const dx = rover.x - rock.x;
+            const dy = rover.y - rock.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const minDist = rock.r + 20; // rover collision radius approx 20px
+            
+            if (dist < minDist) {
+                // Elastic bounce deflection off the rock
+                const bounceAngle = Math.atan2(dy, dx);
+                rover.x = rock.x + Math.cos(bounceAngle) * minDist;
+                
+                // deflect velocity vectors
+                const dot = rover.vx * Math.cos(bounceAngle) + rover.vy * Math.sin(bounceAngle);
+                if (dot < 0) {
+                    rover.vx -= 1.4 * dot * Math.cos(bounceAngle);
+                    rover.vy -= 1.4 * dot * Math.sin(bounceAngle);
+                    // Suspension impact shock is proportional to relative impact speed (capped to max +/- 8px)
+                    rover.suspensionBounce = Math.max(-8, Math.min(8, dot * 0.2));
+                }
+            }
+        });
+
+        // Update battery charge consumption
+        if (thrusterActive) {
+            // already drained battery above
+        } else if (rover.speed > 2) {
+            rover.battery = Math.max(0, rover.battery - dt * 0.08);
+        } else {
+            // Solar charging when stationary
+            rover.battery = Math.min(100, rover.battery + dt * 0.12);
+        }
+
+        // Live telemetry broadcasts to MQTT lobby (capped to 10Hz/100ms throttle)
+        if (!rover.lastBcastTime || now - rover.lastBcastTime > 100) {
+            broadcastPosition();
+            rover.lastBcastTime = now;
+        }
+
+        // Action controls (drill anomalies / plant flags)
+        updateInteractivityAlerts();
+    }
+
+    // ── BOT SIMULATED ARTIFICIAL INTELLIGENCE ──
+    const chatterList = [
+        "Scanning titanium nodes near the western rim.",
+        "Beautiful view of Earth from here!",
+        "Watch out for that deep crater Copernicus, guys.",
+        "Helium-3 deposits detected. Drilling now...",
+        "Planting a beacon coordinate.",
+        "Got some sliding drift at high speed, low traction!",
+        "My battery is fully charged. Rover solar panels operational."
+    ];
+
+    function updateBots(dt) {
+        botPlayers.forEach(bot => {
+            // Drive bot toward target coordinates
+            const dx = bot.targetX - bot.x;
+            const dy = bot.targetY - bot.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            const prevX = bot.x;
+            const prevY = bot.y;
+
+            if (dist > 15) {
+                // Face heading angle
+                const angleTgt = Math.atan2(dy, dx);
+                bot.angle = angleTgt;
+                
+                // Move bot
+                bot.x += Math.cos(bot.angle) * 75 * dt; // constant speed 75px/s
+                bot.y += Math.sin(bot.angle) * 75 * dt;
+
+                // Emit tire tracks
+                if (!bot.lastTrackTime || Date.now() - bot.lastTrackTime > 120) {
+                    addTireTrack(prevX, prevY, bot.x, bot.y, bot.angle);
+                    bot.lastTrackTime = Date.now();
+                }
+            } else {
+                // Choose new random coordinate target
+                bot.targetX = 100 + Math.random() * (MAP_SIZE - 200);
+                bot.targetY = 100 + Math.random() * (MAP_SIZE - 200);
+            }
+
+            // Random bot dialogue broadcasts
+            bot.chatterTimer -= dt;
+            if (bot.chatterTimer <= 0) {
+                const phrase = chatterList[Math.floor(Math.random() * chatterList.length)];
+                addRadioLog(bot.name, phrase);
+                bot.chatterTimer = 20 + Math.random() * 25; // reset
+            }
+        });
+    }
+
+    // ── INTERACTIVE DRILLING & FLAG PLANTING LOGICS ──
+    let activeAction = null;
+    let drillProgress = 0;
+    
+    function updateInteractivityAlerts() {
+        const promptEl = document.getElementById('actionPrompt');
+        activeAction = null;
+
+        // Check mineral drilling distance
+        minerals.forEach((node, index) => {
+            if (node.scanned) return;
+            const dx = rover.x - node.x;
+            const dy = rover.y - node.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < node.r + 28) {
+                activeAction = { type: 'drill', node: node, index: index };
+                promptEl.innerHTML = `<strong>E</strong> Drill ${node.type} (${Math.round(node.amount)} units)`;
+                promptEl.style.display = 'block';
+            }
+        });
+
+        // Flag planting check (can plant anywhere if speed is < 1 m/s)
+        if (!activeAction && rover.speed < 1.0) {
+            // Make sure we are not directly on top of landing pad
+            let nearPad = landingPads.some(p => Math.sqrt((rover.x - p.x)**2 + (rover.y - p.y)**2) < 90);
+            if (!nearPad) {
+                activeAction = { type: 'flag' };
+                promptEl.innerHTML = `<strong>F</strong> Plant Astronaut Flag`;
+                promptEl.style.display = 'block';
+            }
+        }
+
+        if (!activeAction) {
+            promptEl.style.display = 'none';
+            drillProgress = 0;
+        }
+
+        // Trigger action keypress
+        if (activeAction) {
+            if (activeAction.type === 'drill' && keys['KeyE']) {
+                drillProgress += 0.012; // takes ~1.5 seconds to survey
+                promptEl.innerHTML = `<strong>DRILLING...</strong> [${Math.floor(drillProgress * 100)}%]`;
+                
+                // Spark particles effect
+                if (Math.random() < 0.7) {
+                    spawnParticle(activeAction.node.x + (Math.random()-0.5)*30, activeAction.node.y + (Math.random()-0.5)*30,
+                        (Math.random()-0.5)*50, -Math.random()*40, 0.6, 'rgba(102,252,241,0.8)', 2);
+                }
+
+                if (drillProgress >= 1) {
+                    // Completed drill survey! Add rewards to resources
+                    const val = activeAction.node.amount;
+                    activeAction.node.scanned = true;
+                    
+                    if (activeAction.node.type === 'Helium-3') {
+                        ResourceState.resources.fuel = (ResourceState.resources.fuel || 0) + val;
+                        showNotif(`Survey Completed! Mined +${val} Helium-3 (Fuel)`);
+                    } else {
+                        ResourceState.resources.iron = (ResourceState.resources.iron || 0) + val;
+                        showNotif(`Survey Completed! Mined +${val} Titanium (Iron)`);
+                    }
+                    ResourceState.save();
+                    
+                    addRadioLog('SYSTEM', `${astronautName} surveyed a mineral node at [${Math.round(activeAction.node.x)}, ${Math.round(activeAction.node.y)}] adding +${val} material to base.`);
+                    drillProgress = 0;
+                    promptEl.style.display = 'none';
+                }
+            }
+            else if (activeAction.type === 'flag' && keys['KeyF']) {
+                keys['KeyF'] = false; // single trigger
+                const text = prompt("Enter text message to write on your flag:", `${astronautName}'s Rover Base`);
+                if (text) {
+                    const newFlag = {
+                        x: rover.x, y: rover.y,
+                        name: astronautName,
+                        text: text.substring(0, 32)
+                    };
+                    flags.push(newFlag);
+                    
+                    // Broadcast flag to multiplayer lobby
+                    if (mqttClient && mqttClient.connected) {
+                        mqttClient.publish(MQTT_TOPIC + '/flags', JSON.stringify(newFlag));
+                    }
+                    showNotif('Flag planted on lunar surface!');
+                }
+            }
+        }
+    }
+
+    // ── GENERAL SCENE GRAPHICS RENDERING ──
+    function drawNameplate(ctx, text, x, y, color) {
+        ctx.save();
+        ctx.font = 'bold 10px "Orbitron", monospace';
+        const width = ctx.measureText(text).width + 12;
+        ctx.fillStyle = 'rgba(6, 18, 36, 0.82)';
+        ctx.strokeStyle = 'rgba(102, 252, 241, 0.3)';
+        ctx.lineWidth = 1;
+        
+        ctx.beginPath();
+        if (ctx.roundRect) {
+            ctx.roundRect(x - width/2, y - 38, width, 15, 6);
+        } else {
+            ctx.rect(x - width/2, y - 38, width, 15);
+        }
+        ctx.fill();
+        ctx.stroke();
+        
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, x, y - 30);
+        ctx.restore();
+    }
+
+    let particles = [];
+    function spawnParticle(x, y, vx, vy, size, color, life) {
+        particles.push({
+            x: x, y: y,
+            vx: vx, vy: vy,
+            size: size,
+            color: color,
+            life: life,
+            maxLife: life
+        });
+    }
+
+    function renderScene(dt) {
+        // Adjust canvas dimensions dynamically
+        mainCanvas.width = mainCanvas.clientWidth;
+        mainCanvas.height = mainCanvas.clientHeight;
+        const W = mainCanvas.width, H = mainCanvas.height;
+
+        // Camera calculations (follows player rover with integer rounding to prevent sub-pixel shimmering)
+        const camX = Math.round(rover.x - W / 2);
+        const camY = Math.round(rover.y - H / 2);
+
+        // 1. Draw the cached offscreen background canvas viewport
+        mainCtx.drawImage(bgCanvas, -camX, -camY);
+
+        // 2. Draw tire tracks
+        mainCtx.strokeStyle = 'rgba(40, 42, 48, 0.42)'; // dark tire tracks on light moon surface
+        mainCtx.lineWidth = 2.4;
+        mainCtx.lineCap = 'round';
+        tracks.forEach(t => {
+            const lx1 = t.lx1 - camX, ly1 = t.ly1 - camY;
+            const lx2 = t.lx2 - camX, ly2 = t.ly2 - camY;
+            const rx1 = t.rx1 - camX, ry1 = t.ry1 - camY;
+            const rx2 = t.rx2 - camX, ry2 = t.ry2 - camY;
+            
+            mainCtx.globalAlpha = t.life;
+            mainCtx.beginPath(); mainCtx.moveTo(lx1, ly1); mainCtx.lineTo(lx2, ly2); mainCtx.stroke();
+            mainCtx.beginPath(); mainCtx.moveTo(rx1, ry1); mainCtx.lineTo(rx2, ry2); mainCtx.stroke();
+        });
+        mainCtx.globalAlpha = 1.0;
+
+        // 3. Draw grid surface lines in camera frame (faint dark lines for light background)
+        const gridSize = 100;
+        const startGridX = Math.floor(Math.max(0, camX) / gridSize) * gridSize;
+        const endGridX = Math.ceil(Math.min(MAP_SIZE, camX + W) / gridSize) * gridSize;
+        const startGridY = Math.floor(Math.max(0, camY) / gridSize) * gridSize;
+        const endGridY = Math.ceil(Math.min(MAP_SIZE, camY + H) / gridSize) * gridSize;
+
+        mainCtx.strokeStyle = 'rgba(0, 0, 0, 0.035)';
+        mainCtx.lineWidth = 1;
+        for (let x = startGridX; x <= endGridX; x += gridSize) {
+            mainCtx.beginPath(); mainCtx.moveTo(x - camX, Math.max(0, camY) - camY); mainCtx.lineTo(x - camX, Math.min(MAP_SIZE, camY + H) - camY); mainCtx.stroke();
+        }
+        for (let y = startGridY; y <= endGridY; y += gridSize) {
+            mainCtx.beginPath(); mainCtx.moveTo(Math.max(0, camX) - camX, y - camY); mainCtx.lineTo(Math.min(MAP_SIZE, camX + W) - camX, y - camY); mainCtx.stroke();
+        }
+
+        // 4. Draw boundary warning walls
+        mainCtx.strokeStyle = 'rgba(255, 71, 87, 0.35)';
+        mainCtx.lineWidth = 4;
+        mainCtx.strokeRect(0 - camX, 0 - camY, MAP_SIZE, MAP_SIZE);
+
+        // Global sun vector for shadows (pointing bottom-right)
+        const SUN_ANGLE = Math.PI / 5;
+        const SHADOW_LEN = 1.35;
+
+        // 1. Draw Craters shadows first
+        craters.forEach(crater => {
+            const screenCX = crater.x - camX;
+            const screenCY = crater.y - camY;
+            if (screenCX < -crater.r || screenCX > W + crater.r || screenCY < -crater.r || screenCY > H + crater.r) return;
+
+            // Ejecta rays
+            mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+            mainCtx.lineWidth = 1;
+            const raysCount = 12;
+            for (let r = 0; r < raysCount; r++) {
+                const rayAngle = (r / raysCount) * Math.PI * 2 + (crater.x * 0.01);
+                const startDist = crater.r * 0.95;
+                const endDist = crater.r * (1.5 + (Math.sin(r + crater.y) * 0.4));
+                mainCtx.beginPath();
+                mainCtx.moveTo(screenCX + Math.cos(rayAngle) * startDist, screenCY + Math.sin(rayAngle) * startDist);
+                mainCtx.lineTo(screenCX + Math.cos(rayAngle) * endDist, screenCY + Math.sin(rayAngle) * endDist);
+                mainCtx.stroke();
+            }
+
+            // Outer Lip Shadow
+            const lipGrad = mainCtx.createRadialGradient(screenCX, screenCY, crater.r * 0.9, screenCX, screenCY, crater.r * 1.1);
+            lipGrad.addColorStop(0, 'rgba(30, 30, 30, 0)');
+            lipGrad.addColorStop(0.5, 'rgba(10, 12, 15, 0.82)');
+            lipGrad.addColorStop(0.8, 'rgba(80, 80, 80, 0.15)');
+            lipGrad.addColorStop(1, 'rgba(80, 80, 80, 0)');
+            mainCtx.fillStyle = lipGrad;
+            mainCtx.beginPath(); mainCtx.arc(screenCX, screenCY, crater.r * 1.1, 0, Math.PI * 2); mainCtx.fill();
+
+            // Inner Shadow Bowl (Linear Light-Shadow Gradient aligned with Sun ray vector)
+            const gradStartX = screenCX - Math.cos(SUN_ANGLE) * crater.r;
+            const gradStartY = screenCY - Math.sin(SUN_ANGLE) * crater.r;
+            const gradEndX = screenCX + Math.cos(SUN_ANGLE) * crater.r;
+            const gradEndY = screenCY + Math.sin(SUN_ANGLE) * crater.r;
+            const bowlGrad = mainCtx.createLinearGradient(gradStartX, gradStartY, gradEndX, gradEndY);
+            
+            // Left side (facing away from light): soft shadow crescent
+            bowlGrad.addColorStop(0.0, 'rgba(12, 14, 18, 0.72)');
+            bowlGrad.addColorStop(0.35, 'rgba(12, 14, 18, 0.52)');
+            // Center floor: semi-translucent grey revealing underlying regolith texture
+            bowlGrad.addColorStop(0.6, 'rgba(20, 22, 26, 0.12)');
+            // Right side (facing light): sunlit slope highlight
+            bowlGrad.addColorStop(0.85, 'rgba(255, 255, 255, 0.22)');
+            bowlGrad.addColorStop(1.0, 'rgba(255, 255, 255, 0.48)');
+            
+            mainCtx.fillStyle = bowlGrad;
+            mainCtx.beginPath(); mainCtx.arc(screenCX, screenCY, crater.r, 0, Math.PI * 2); mainCtx.fill();
+
+            // Concentric Rim contours (Sun-aligned light and shadow contours)
+            // Top-left outer rim: bright white stroke representing direct sunlight hit
+            mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            mainCtx.lineWidth = 1.8;
+            mainCtx.beginPath();
+            mainCtx.arc(screenCX, screenCY, crater.r, SUN_ANGLE + Math.PI/2, SUN_ANGLE + Math.PI * 1.5);
+            mainCtx.stroke();
+
+            // Bottom-right outer rim: soft dark stroke representing cast rim shadow
+            mainCtx.strokeStyle = 'rgba(10, 12, 15, 0.65)';
+            mainCtx.lineWidth = 1.8;
+            mainCtx.beginPath();
+            mainCtx.arc(screenCX, screenCY, crater.r, SUN_ANGLE - Math.PI/2, SUN_ANGLE + Math.PI/2);
+            mainCtx.stroke();
+
+            // Subtle inner rim line
+            mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            mainCtx.lineWidth = 1;
+            mainCtx.beginPath(); mainCtx.arc(screenCX, screenCY, crater.r * 0.95, 0, Math.PI * 2); mainCtx.stroke();
+
+            // Label
+            mainCtx.fillStyle = 'rgba(102,252,241,0.25)';
+            mainCtx.font = 'bold 9px "Orbitron", monospace';
+            mainCtx.textAlign = 'center';
+            mainCtx.fillText(crater.name, screenCX, screenCY + crater.r * 0.45);
+        });
+
+        // 2. Draw landing recovery pads & landers shadows
+        landingPads.forEach(pad => {
+            const px = pad.x - camX, py = pad.y - camY;
+            const padW = 100;
+
+            // Draw shadow for landing pad/lander
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+            mainCtx.beginPath();
+            mainCtx.ellipse(px + 12, py + 12, 36, 14, SUN_ANGLE, 0, Math.PI * 2);
+            mainCtx.fill();
+
+            // Render pad lines
+            mainCtx.strokeStyle = 'rgba(102,252,241,0.2)';
+            mainCtx.lineWidth = 2;
+            mainCtx.strokeRect(px - padW/2, py - 4, padW, 8);
+            mainCtx.fillStyle = 'rgba(102,252,241,0.06)';
+            mainCtx.fillRect(px - padW/2, py - 4, padW, 8);
+
+            // Draw lander structure (Only for Lander Site Beta - active player landing pad)
+            if (pad.x === 1500 && pad.y === 1500) {
+                mainCtx.save();
+                mainCtx.translate(px, py - 18);
+                mainCtx.scale(0.8, 0.8);
+                
+                // Draw deployment ramp
+                mainCtx.fillStyle = '#223040';
+                mainCtx.fillRect(-7, 20, 14, 40);
+                mainCtx.strokeStyle = 'rgba(102,252,241,0.3)';
+                mainCtx.lineWidth = 1;
+                mainCtx.strokeRect(-7, 20, 14, 40);
+                
+                // Lander Hex Body
+                mainCtx.fillStyle = '#7a8b9e'; mainCtx.beginPath();
+                for (let i = 0; i < 6; i++) {
+                    const a = i / 6 * Math.PI * 2 - Math.PI / 6;
+                    mainCtx.lineTo(Math.cos(a) * 22, Math.sin(a) * 22);
+                }
+                mainCtx.closePath(); mainCtx.fill();
+                mainCtx.strokeStyle = 'rgba(102,252,241,.4)'; mainCtx.lineWidth = 1.5; mainCtx.stroke();
+                
+                // Struts / legs
+                mainCtx.strokeStyle = '#5a5a5a'; mainCtx.lineWidth = 2;
+                mainCtx.beginPath(); mainCtx.moveTo(-18, 14); mainCtx.lineTo(-28, 22); mainCtx.stroke();
+                mainCtx.beginPath(); mainCtx.moveTo(18, 14); mainCtx.lineTo(28, 22); mainCtx.stroke();
+                mainCtx.restore();
+            }
+
+            mainCtx.fillStyle = 'rgba(102,252,241,0.35)';
+            mainCtx.font = 'bold 9px "Orbitron", monospace';
+            mainCtx.textAlign = 'center';
+            mainCtx.fillText(pad.name, px, py - 42);
+        });
+
+        // 3. Draw mineral hotspots
+        minerals.forEach(node => {
+            if (node.scanned) return;
+            const screenNX = node.x - camX, screenNY = node.y - camY;
+            const glowT = 1.2 + Math.sin(performance.now() * 0.005) * 0.25;
+            const glowGrad = mainCtx.createRadialGradient(screenNX, screenNY, 0, screenNX, screenNY, node.r * glowT);
+            glowGrad.addColorStop(0, 'rgba(102, 252, 241, 0.08)');
+            glowGrad.addColorStop(1, 'rgba(102, 252, 241, 0)');
+            mainCtx.fillStyle = glowGrad;
+            mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, node.r * glowT, 0, Math.PI * 2); mainCtx.fill();
+
+            mainCtx.fillStyle = 'rgba(102, 252, 241, 0.55)';
+            mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, 6, 0, Math.PI * 2); mainCtx.fill();
+            mainCtx.strokeStyle = '#66fcf1';
+            mainCtx.lineWidth = 1;
+            mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, 12 + Math.sin(performance.now() * 0.007)*3, 0, Math.PI * 2); mainCtx.stroke();
+            
+            mainCtx.fillStyle = '#66fcf1';
+            mainCtx.font = 'bold 9px "Orbitron", monospace';
+            mainCtx.textAlign = 'center';
+            mainCtx.fillText('SURVEY POINT: ' + node.type.toUpperCase(), screenNX, screenNY - 18);
+        });
+
+        // 4. Draw flags planted & shadows
+        flags.forEach(flag => {
+            const fx = flag.x - camX, fy = flag.y - camY;
+
+            // Draw flag shadow
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            mainCtx.beginPath();
+            mainCtx.moveTo(fx, fy);
+            mainCtx.lineTo(fx + 22, fy + 11);
+            mainCtx.lineTo(fx + 10, fy + 14);
+            mainCtx.closePath();
+            mainCtx.fill();
+
+            // Flag pole
+            mainCtx.strokeStyle = '#fff';
+            mainCtx.lineWidth = 2.5;
+            mainCtx.beginPath(); mainCtx.moveTo(fx, fy); mainCtx.lineTo(fx, fy - 26); mainCtx.stroke();
+
+            // Flag fabric
+            mainCtx.fillStyle = 'rgba(102, 252, 241, 0.8)';
+            mainCtx.beginPath();
+            mainCtx.moveTo(fx, fy - 26);
+            mainCtx.lineTo(fx + 24, fy - 22);
+            mainCtx.lineTo(fx, fy - 17);
+            mainCtx.closePath();
+            mainCtx.fill();
+
+            mainCtx.fillStyle = 'rgba(255,255,255,0.45)';
+            mainCtx.font = '9px "Rajdhani", sans-serif';
+            mainCtx.textAlign = 'center';
+            mainCtx.fillText(flag.text, fx, fy + 12);
+        });
+
+        // 5. Draw rocks shadows
+        rocks.forEach(rock => {
+            const rx = rock.x - camX, ry = rock.y - camY;
+            if (rx < -rock.r || rx > W + rock.r || ry < -rock.r || ry > H + rock.r) return;
+
+            mainCtx.save();
+            mainCtx.translate(rx, ry);
+            mainCtx.rotate(SUN_ANGLE);
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.62)';
+            mainCtx.beginPath();
+            mainCtx.ellipse(rock.r * 0.4, 0, rock.r * SHADOW_LEN, rock.r * 0.8, 0, 0, Math.PI * 2);
+            mainCtx.fill();
+            mainCtx.restore();
+        });
+
+        // 6. Draw rocks/boulders
+        rocks.forEach(rock => {
+            const rx = rock.x - camX, ry = rock.y - camY;
+            if (rx < -rock.r || rx > W + rock.r || ry < -rock.r || ry > H + rock.r) return;
+
+            const rockGrad = mainCtx.createRadialGradient(rx - rock.r*0.2, ry - rock.r*0.2, 0, rx, ry, rock.r);
+            rockGrad.addColorStop(0, '#a5a5a5');
+            rockGrad.addColorStop(0.7, '#6c6c6c');
+            rockGrad.addColorStop(1, '#333333');
+            mainCtx.fillStyle = rockGrad;
+            mainCtx.beginPath(); mainCtx.arc(rx, ry, rock.r, 0, Math.PI * 2); mainCtx.fill();
+            mainCtx.strokeStyle = 'rgba(0,0,0,0.4)';
+            mainCtx.lineWidth = 1;
+            mainCtx.stroke();
+        });
+
+        // 7. Draw offline players (ghost vehicle shadows & rovers)
+        ghostPlayers.forEach(g => {
+            const gx = g.x - camX, gy = g.y - camY;
+            if (gx < -30 || gx > W + 30 || gy < -30 || gy > H + 30) return;
+
+            // Shadow
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            mainCtx.save();
+            mainCtx.translate(gx + 6, gy + 8);
+            mainCtx.rotate(g.angle);
+            mainCtx.fillRect(-15, -12, 30, 24);
+            mainCtx.restore();
+
+            mainCtx.save();
+            mainCtx.globalAlpha = 0.38;
+            const ghostDynamics = getCraterDynamics(g.x, g.y, g.angle);
+            drawRoverVehicle(gx, gy, g.angle, 0, false, ghostDynamics);
+            mainCtx.restore();
+
+            // holographic nameplate
+            drawNameplate(mainCtx, `${g.name} [GHOST]`, gx, gy, 'rgba(255, 255, 255, 0.45)');
+        });
+
+        // 8. Draw bot players shadows and rovers
+        botPlayers.forEach(bot => {
+            const bx = bot.x - camX, by = bot.y - camY;
+            if (bx < -30 || bx > W + 30 || by < -30 || by > H + 30) return;
+
+            // Shadow
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            mainCtx.save();
+            mainCtx.translate(bx + 8, by + 11);
+            mainCtx.rotate(bot.angle);
+            mainCtx.fillRect(-15, -12, 30, 24);
+            mainCtx.restore();
+
+            const botDynamics = getCraterDynamics(bot.x, bot.y, bot.angle);
+            drawRoverVehicle(bx, by, bot.angle, 0, true, botDynamics);
+            drawNameplate(mainCtx, bot.name + ' [BOT]', bx, by, '#ffb703');
+        });
+
+        // 9. Draw online players shadows and rovers
+        Object.keys(onlinePlayers).forEach(pId => {
+            const p = onlinePlayers[pId];
+            const px = p.x - camX, py = p.y - camY;
+            if (px < -30 || px > W + 30 || py < -30 || py > H + 30) return;
+
+            // Shadow
+            mainCtx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+            mainCtx.save();
+            mainCtx.translate(px + 8, py + 11);
+            mainCtx.rotate(p.angle);
+            mainCtx.fillRect(-15, -12, 30, 24);
+            mainCtx.restore();
+
+            const syncDynamics = getCraterDynamics(p.x, p.y, p.angle);
+            drawRoverVehicle(px, py, p.angle, 0, true, syncDynamics);
+            drawNameplate(mainCtx, p.name + ' [SYNC]', px, py, '#00ff88');
+
+            // Synced player tire tracks
+            if (p.speed > 1.8) {
+                if (!p.lastTrackTime || Date.now() - p.lastTrackTime > 120) {
+                    const prevX = p.x - Math.cos(p.angle) * p.speed * 0.1;
+                    const prevY = p.y - Math.sin(p.angle) * p.speed * 0.1;
+                    addTireTrack(prevX, prevY, p.x, p.y, p.angle);
+                    p.lastTrackTime = Date.now();
+                }
+            }
+        });
+
+        // 10. Draw main player shadow & rover
+        const playerPX = rover.x - camX, playerPY = rover.y - camY;
+        
+        mainCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        mainCtx.save();
+        mainCtx.translate(playerPX + 8, playerPY + 11);
+        mainCtx.rotate(rover.angle);
+        mainCtx.fillRect(-15, -12, 30, 24);
+        mainCtx.restore();
+
+        const playerDynamics = getCraterDynamics(rover.x, rover.y, rover.angle);
+        drawRoverVehicle(playerPX, playerPY, rover.angle, rover.suspensionBounce, true, playerDynamics);
+        drawNameplate(mainCtx, astronautName + ' (You)', playerPX, playerPY, '#ffd700');
+
+        // 11. Tick and draw particle effects
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.life -= dt;
+            if (p.life <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+
+            const alpha = Math.max(0, p.life / p.maxLife);
+            mainCtx.fillStyle = p.color;
+            mainCtx.globalAlpha = alpha;
+            mainCtx.beginPath();
+            mainCtx.arc(p.x - camX, p.y - camY, p.size * alpha, 0, Math.PI * 2);
+            mainCtx.fill();
+        }
+        mainCtx.globalAlpha = 1.0;
+
+        // 12. Update telemetry display in HUD
+        document.getElementById('telX').textContent = Math.round(rover.x);
+        document.getElementById('telY').textContent = Math.round(rover.y);
+        document.getElementById('telSpeed').textContent = (rover.speed * 0.1).toFixed(1) + ' m/s';
+        
+        const battEl = document.getElementById('telBattery');
+        battEl.textContent = Math.round(rover.battery) + '%';
+        if (rover.battery < 20) {
+            battEl.style.color = varValue('--danger');
+        } else if (rover.battery < 60) {
+            battEl.style.color = '#ffb703';
+        } else {
+            battEl.style.color = '#00ff88';
+        }
+    }
+
+    function varValue(varName) {
+        return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+    }
+
+    // ── CRATER DYNAMICS & 3D PERSPECTIVE SOLVER ──
+    function getCraterDynamics(mapX, mapY, angle) {
+        let tiltX = 0;
+        let tiltY = 0;
+        let depthScale = 1.0;
+        
+        craters.forEach(crater => {
+            const dx = mapX - crater.x;
+            const dy = mapY - crater.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < crater.r && dist > 0) {
+                // Slope steepness peaks in the middle (sine profile)
+                const steepness = Math.sin((1 - dist / crater.r) * Math.PI);
+                // Uphill vector points outward from center
+                tiltX += (dx / dist) * steepness;
+                tiltY += (dy / dist) * steepness;
+                
+                // Depth is highest at the center
+                const depthFactor = Math.sin((1.0 - dist / crater.r) * Math.PI / 2);
+                depthScale = Math.min(depthScale, 1.0 - depthFactor * 0.12);
+            }
+        });
+
+        // Clamp total slope tilt vector
+        const totalTilt = Math.sqrt(tiltX*tiltX + tiltY*tiltY);
+        if (totalTilt > 1.0) {
+            tiltX /= totalTilt;
+            tiltY /= totalTilt;
+        }
+
+        // Project onto rover local coordinates
+        const localPitch = tiltX * Math.cos(angle) + tiltY * Math.sin(angle);
+        const localRoll = -tiltX * Math.sin(angle) + tiltY * Math.cos(angle);
+
+        return {
+            tiltX,
+            tiltY,
+            depthScale,
+            localPitch,
+            localRoll
+        };
+    }
+
+    // ── ROTATING SPRITE VECTOR ROVER DRAWING ──
+    function drawRoverVehicle(x, y, angle, bounceOffset, drawPanelsGlow, dynamics) {
+        const pitch = dynamics ? dynamics.localPitch : 0;
+        const roll = dynamics ? dynamics.localRoll : 0;
+        const depth = dynamics ? dynamics.depthScale : 1.0;
+
+        mainCtx.save();
+        mainCtx.translate(x, y + bounceOffset);
+        mainCtx.rotate(angle);
+        
+        const squishX = 1.0 - Math.abs(pitch) * 0.15;
+        const squishY = 1.0 - Math.abs(roll) * 0.15;
+        mainCtx.scale(0.85 * depth * squishX, 0.85 * depth * squishY);
+
+        const isSteeringLeft = keys['ArrowLeft'] || keys['KeyA'];
+        const isSteeringRight = keys['ArrowRight'] || keys['KeyD'];
+        const steerAngle = isSteeringLeft ? -0.32 : (isSteeringRight ? 0.32 : 0);
+
+        const shiftX = pitch * 9;
+        const shiftY = roll * 9;
+
+        // 1. Draw Rocker-Bogie Suspension struts (intermediate height parallax shift)
+        mainCtx.save();
+        mainCtx.translate(shiftX * 0.4, shiftY * 0.4);
+        
+        mainCtx.strokeStyle = '#3a3d45';
+        mainCtx.lineWidth = 2.5;
+        
+        // Left bogie arm
+        mainCtx.beginPath();
+        mainCtx.moveTo(-12, -10);
+        mainCtx.lineTo(0, -15);
+        mainCtx.lineTo(12, -10);
+        mainCtx.stroke();
+        
+        // Right bogie arm
+        mainCtx.beginPath();
+        mainCtx.moveTo(-12, 10);
+        mainCtx.lineTo(0, 15);
+        mainCtx.lineTo(12, 10);
+        mainCtx.stroke();
+        
+        // Bogie joints (silver pivot circles)
+        mainCtx.fillStyle = '#b0b5be';
+        mainCtx.beginPath(); mainCtx.arc(0, -15, 3, 0, Math.PI*2); mainCtx.fill();
+        mainCtx.beginPath(); mainCtx.arc(0, 15, 3, 0, Math.PI*2); mainCtx.fill();
+        
+        mainCtx.restore();
+
+        // 2. Draw 6 Curiosity-style ribbed aluminum wheels
+        function drawWheel(wheelX, wheelY, angleOffset, pivotable) {
+            mainCtx.save();
+            mainCtx.translate(wheelX, wheelY);
+            if (pivotable) {
+                mainCtx.rotate(angleOffset);
+            }
+            
+            // Tire body (dark charcoal)
+            mainCtx.fillStyle = '#242528';
+            mainCtx.fillRect(-6, -4, 12, 8);
+            
+            // Rim (silver metal center cap)
+            mainCtx.fillStyle = '#8a8d94';
+            mainCtx.fillRect(-4, -1.5, 8, 3);
+            
+            // Tread Ribs (ribbed aluminum patterns)
+            mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            mainCtx.lineWidth = 1;
+            for (let ox = -5; ox <= 5; ox += 2.5) {
+                mainCtx.beginPath();
+                mainCtx.moveTo(ox, -4);
+                mainCtx.lineTo(ox, -2.5);
+                mainCtx.stroke();
+                mainCtx.beginPath();
+                mainCtx.moveTo(ox, 2.5);
+                mainCtx.lineTo(ox, 4);
+                mainCtx.stroke();
+            }
+            mainCtx.restore();
+        }
+
+        // Left Wheels (Y = -17)
+        drawWheel(-16, -17, steerAngle, true);  // Front Left
+        drawWheel(0, -19, 0, false);            // Middle Left
+        drawWheel(16, -17, 0, false);           // Rear Left
+
+        // Right Wheels (Y = 17)
+        drawWheel(-16, 17, steerAngle, true);   // Front Right
+        drawWheel(0, 19, 0, false);             // Middle Right
+        drawWheel(16, 17, 0, false);            // Rear Right
+
+        // 3. Equipment Deck (Curiosity/Perseverance Faceted 3D Body - full height parallax shift)
+        mainCtx.save();
+        mainCtx.translate(shiftX, shiftY);
+
+        // Center equipment box (gold thermal insulation blanket)
+        mainCtx.fillStyle = '#cca43b'; // gold Kapton foil
+        mainCtx.strokeStyle = '#8c7023';
+        mainCtx.lineWidth = 1.2;
+        mainCtx.beginPath();
+        mainCtx.moveTo(-17, -11);
+        mainCtx.lineTo(13, -11);
+        mainCtx.lineTo(17, -7);
+        mainCtx.lineTo(17, 7);
+        mainCtx.lineTo(13, 11);
+        mainCtx.lineTo(-17, 11);
+        mainCtx.closePath();
+        mainCtx.fill();
+        mainCtx.stroke();
+
+        // Silver scientific top plates & solar/battery covers
+        mainCtx.fillStyle = '#7a7e85'; // silver anodized metal
+        mainCtx.fillRect(-12, -8, 20, 16);
+        mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        mainCtx.strokeRect(-12, -8, 20, 16);
+
+        // Instrument details (small squares, circuitry lines)
+        mainCtx.fillStyle = '#3a3d42';
+        mainCtx.fillRect(-8, -5, 6, 4); // computer unit
+        mainCtx.fillStyle = '#0f4c81';
+        mainCtx.fillRect(0, -6, 5, 5);  // optical sensor box
+        mainCtx.fillStyle = '#ff3333';
+        mainCtx.beginPath(); mainCtx.arc(2, -3, 1, 0, Math.PI*2); mainCtx.fill(); // status LED
+
+        // 4. Rear Cylindrical RTG Power Source (Nuclear Reactor)
+        // extends rearwards, has cooling radiator fins
+        mainCtx.save();
+        mainCtx.translate(17, 0);
+        // cylinder body
+        mainCtx.fillStyle = '#55585d';
+        mainCtx.fillRect(0, -4, 14, 8);
+        mainCtx.strokeStyle = '#2d2f32';
+        mainCtx.lineWidth = 1;
+        mainCtx.strokeRect(0, -4, 14, 8);
+        // cooling fins (horizontal lines)
+        mainCtx.strokeStyle = '#c4c9d0';
+        mainCtx.lineWidth = 1.2;
+        for (let fx = 2; fx <= 12; fx += 3) {
+            mainCtx.beginPath();
+            mainCtx.moveTo(fx, -6);
+            mainCtx.lineTo(fx, 6);
+            mainCtx.stroke();
+        }
+        // red hot core glow at tip
+        mainCtx.fillStyle = '#ff4757';
+        mainCtx.fillRect(14, -2, 2, 4);
+        mainCtx.restore();
+
+        // 5. Tall Mastcam Camera Tower (Mast projecting up/forward-left)
+        // Draws tilted perspective to give 3D vibe
+        const mastX = -13;
+        const mastY = -5;
+        
+        // Shadow of the mast drawn on the deck
+        mainCtx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+        mainCtx.lineWidth = 2;
+        mainCtx.beginPath();
+        mainCtx.moveTo(mastX, mastY);
+        mainCtx.lineTo(mastX + 6, mastY + 6);
+        mainCtx.stroke();
+        
+        // Mast pole
+        mainCtx.strokeStyle = '#4a4d52';
+        mainCtx.lineWidth = 3;
+        mainCtx.beginPath();
+        mainCtx.moveTo(mastX, mastY);
+        mainCtx.lineTo(mastX - 4, mastY - 10); // projects tilted forward-left
+        mainCtx.stroke();
+        
+        // Camera Head Box at the top
+        mainCtx.save();
+        mainCtx.translate(mastX - 4, mastY - 10);
+        mainCtx.fillStyle = '#282b30'; // Mastcam head
+        mainCtx.fillRect(-4, -3, 8, 6);
+        mainCtx.strokeStyle = '#fff';
+        mainCtx.lineWidth = 0.5;
+        mainCtx.strokeRect(-4, -3, 8, 6);
+        // Camera Lens eyes (dual circular optical ports)
+        mainCtx.fillStyle = '#00ffff';
+        mainCtx.beginPath(); mainCtx.arc(-2, 0, 1.2, 0, Math.PI*2); mainCtx.fill();
+        mainCtx.beginPath(); mainCtx.arc(2, 0, 1.2, 0, Math.PI*2); mainCtx.fill();
+        mainCtx.restore();
+
+        // 6. Front Robotic Arm (extends from front-center)
+        mainCtx.strokeStyle = '#6c727c';
+        mainCtx.lineWidth = 2;
+        mainCtx.beginPath();
+        mainCtx.moveTo(-17, 3);
+        mainCtx.lineTo(-24, 6);
+        mainCtx.lineTo(-29, 2); // jointed arm
+        mainCtx.stroke();
+        // Turret drill tip
+        mainCtx.fillStyle = '#3a3d42';
+        mainCtx.fillRect(-31, 0, 3, 4);
+
+        // 7. High-gain antenna dish (rear right)
+        mainCtx.save();
+        mainCtx.translate(10, 6);
+        mainCtx.strokeStyle = '#b0b5be';
+        mainCtx.lineWidth = 1;
+        mainCtx.beginPath();
+        mainCtx.ellipse(0, 0, 4, 2, 0.3, 0, Math.PI*2);
+        mainCtx.stroke();
+        // center horn feed
+        mainCtx.strokeStyle = '#00ffff';
+        mainCtx.beginPath();
+        mainCtx.moveTo(0, 0);
+        mainCtx.lineTo(-2, -3);
+        mainCtx.stroke();
+        mainCtx.restore(); // for antenna
+
+        mainCtx.restore(); // end deck shift
+
+        mainCtx.restore(); // end main save
+    }
+
+    // ── RADAR MINIMAP HUD RENDERING ──
+    function renderMinimap() {
+        const W = mapCanvas.width, H = mapCanvas.height;
+        mapCtx.clearRect(0, 0, W, H);
+
+        // draw center cross grid
+        mapCtx.strokeStyle = 'rgba(102,252,241,0.06)';
+        mapCtx.lineWidth = 1;
+        mapCtx.beginPath(); mapCtx.moveTo(W/2, 0); mapCtx.lineTo(W/2, H); mapCtx.stroke();
+        mapCtx.beginPath(); mapCtx.moveTo(0, H/2); mapCtx.lineTo(W, H/2); mapCtx.stroke();
+
+        // Scale factors: maps MAP_SIZE to minimap width
+        const scale = W / MAP_SIZE;
+
+        // Draw craters
+        craters.forEach(c => {
+            mapCtx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            mapCtx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+            mapCtx.beginPath(); mapCtx.arc(c.x * scale, c.y * scale, c.r * scale, 0, Math.PI * 2); mapCtx.fill(); mapCtx.stroke();
+        });
+
+        // Draw mineral node points
+        minerals.forEach(node => {
+            if (node.scanned) return;
+            mapCtx.fillStyle = '#66fcf1';
+            mapCtx.beginPath(); mapCtx.arc(node.x * scale, node.y * scale, 2.5, 0, Math.PI * 2); mapCtx.fill();
+        });
+
+        // Draw flags
+        flags.forEach(f => {
+            mapCtx.fillStyle = '#ff8c00';
+            mapCtx.font = '8px Arial';
+            mapCtx.fillText('🚩', f.x * scale - 4, f.y * scale + 3);
+        });
+
+        // Draw other players
+        mapCtx.fillStyle = '#66fcf1';
+        Object.keys(onlinePlayers).forEach(pId => {
+            const p = onlinePlayers[pId];
+            mapCtx.beginPath(); mapCtx.arc(p.x * scale, p.y * scale, 2.5, 0, Math.PI * 2); mapCtx.fill();
+        });
+
+        // Draw bot players
+        botPlayers.forEach(bot => {
+            mapCtx.beginPath(); mapCtx.arc(bot.x * scale, bot.y * scale, 2.5, 0, Math.PI * 2); mapCtx.fill();
+        });
+
+        // Draw offline ghosts
+        mapCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ghostPlayers.forEach(g => {
+            mapCtx.beginPath(); mapCtx.arc(g.x * scale, g.y * scale, 2, 0, Math.PI * 2); mapCtx.fill();
+        });
+
+        // Draw landing pads
+        mapCtx.strokeStyle = '#66fcf1';
+        mapCtx.lineWidth = 1;
+        landingPads.forEach(pad => {
+            const size = 6;
+            mapCtx.strokeRect(pad.x * scale - size/2, pad.y * scale - size/2, size, size);
+        });
+
+        // Draw self player dot
+        mapCtx.fillStyle = '#ffd700';
+        mapCtx.beginPath(); mapCtx.arc(rover.x * scale, rover.y * scale, 3.5, 0, Math.PI * 2); mapCtx.fill();
+    }
+
+    // ── FULLSCREEN TACTICAL MAP RENDERING ──
+    let tacticalOverlayOpen = false;
+
+    function toggleTacticalOverlay() {
+        const overlay = document.getElementById('tacticalOverlay');
+        tacticalOverlayOpen = !tacticalOverlayOpen;
+        
+        if (tacticalOverlayOpen) {
+            overlay.style.display = 'flex';
+        } else {
+            overlay.style.display = 'none';
+        }
+    }
+
+    function renderTacticalLargeMap() {
+        if (!tacticalOverlayOpen) return;
+
+        largeMapCanvas.width = largeMapCanvas.clientWidth;
+        largeMapCanvas.height = largeMapCanvas.clientHeight;
+        const W = largeMapCanvas.width, H = largeMapCanvas.height;
+        
+        largeMapCtx.clearRect(0, 0, W, H);
+
+        // Map dimensions scaling (keeping ratio)
+        const mapScale = Math.min(W, H) / MAP_SIZE;
+        const offsetX = (W - MAP_SIZE * mapScale) / 2;
+        const offsetY = (H - MAP_SIZE * mapScale) / 2;
+
+        // Draw tactical border
+        largeMapCtx.strokeStyle = 'rgba(102, 252, 241, 0.4)';
+        largeMapCtx.lineWidth = 2;
+        largeMapCtx.strokeRect(offsetX, offsetY, MAP_SIZE * mapScale, MAP_SIZE * mapScale);
+
+        // Draw grid coordinates
+        largeMapCtx.strokeStyle = 'rgba(102, 252, 241, 0.08)';
+        largeMapCtx.lineWidth = 1;
+        const step = 200 * mapScale;
+        for (let x = offsetX; x <= offsetX + MAP_SIZE * mapScale; x += step) {
+            largeMapCtx.beginPath(); largeMapCtx.moveTo(x, offsetY); largeMapCtx.lineTo(x, offsetY + MAP_SIZE * mapScale); largeMapCtx.stroke();
+        }
+        for (let y = offsetY; y <= offsetY + MAP_SIZE * mapScale; y += step) {
+            largeMapCtx.beginPath(); largeMapCtx.moveTo(offsetX, y); largeMapCtx.lineTo(offsetX + MAP_SIZE * mapScale, y); largeMapCtx.stroke();
+        }
+
+        const toScreenX = (mapX) => offsetX + mapX * mapScale;
+        const toScreenY = (mapY) => offsetY + mapY * mapScale;
+
+        // Draw Craters
+        craters.forEach(c => {
+            const scX = toScreenX(c.x), scY = toScreenY(c.y);
+            largeMapCtx.fillStyle = 'rgba(255, 71, 87, 0.03)';
+            largeMapCtx.strokeStyle = 'rgba(255, 71, 87, 0.25)';
+            largeMapCtx.beginPath(); largeMapCtx.arc(scX, scY, c.r * mapScale, 0, Math.PI * 2); largeMapCtx.fill(); largeMapCtx.stroke();
+
+            // Label
+            largeMapCtx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+            largeMapCtx.font = '8px "Orbitron", monospace';
+            largeMapCtx.textAlign = 'center';
+            largeMapCtx.fillText(c.name.toUpperCase(), scX, scY + 3);
+        });
+
+        // Draw mineral nodes
+        minerals.forEach(node => {
+            if (node.scanned) return;
+            const snX = toScreenX(node.x), snY = toScreenY(node.y);
+            largeMapCtx.fillStyle = '#66fcf1';
+            largeMapCtx.beginPath(); largeMapCtx.arc(snX, snY, 4, 0, Math.PI * 2); largeMapCtx.fill();
+            
+            largeMapCtx.fillStyle = 'rgba(102, 252, 241, 0.6)';
+            largeMapCtx.font = '7px "Orbitron", monospace';
+            largeMapCtx.fillText(node.type, snX, snY - 8);
+        });
+
+        // Draw flags
+        flags.forEach(f => {
+            const fx = toScreenX(f.x), fy = toScreenY(f.y);
+            largeMapCtx.fillStyle = '#ff8c00';
+            largeMapCtx.font = '12px Arial';
+            largeMapCtx.fillText('🚩', fx - 6, fy + 4);
+        });
+
+        // Draw landing pads
+        landingPads.forEach(pad => {
+            const px = toScreenX(pad.x), py = toScreenY(pad.y);
+            const size = 12 * mapScale;
+            largeMapCtx.strokeStyle = '#66fcf1';
+            largeMapCtx.lineWidth = 1.5;
+            largeMapCtx.strokeRect(px - size/2, py - size/2, size, size);
+            
+            largeMapCtx.fillStyle = 'rgba(102,252,241,0.5)';
+            largeMapCtx.font = '7px "Orbitron", monospace';
+            largeMapCtx.fillText(pad.name.split(' ')[2], px, py - size/2 - 4);
+        });
+
+        // Draw other active online players
+        largeMapCtx.fillStyle = '#66fcf1';
+        Object.keys(onlinePlayers).forEach(pId => {
+            const p = onlinePlayers[pId];
+            const px = toScreenX(p.x), py = toScreenY(p.y);
+            largeMapCtx.beginPath(); largeMapCtx.arc(px, py, 4, 0, Math.PI * 2); largeMapCtx.fill();
+            largeMapCtx.fillStyle = 'rgba(102, 252, 241, 0.7)';
+            largeMapCtx.font = 'bold 8px "Orbitron", monospace';
+            largeMapCtx.fillText(p.name, px, py - 9);
+        });
+
+        // Draw bots
+        botPlayers.forEach(bot => {
+            const bx = toScreenX(bot.x), by = toScreenY(bot.y);
+            largeMapCtx.fillStyle = '#66fcf1';
+            largeMapCtx.beginPath(); largeMapCtx.arc(bx, by, 4, 0, Math.PI * 2); largeMapCtx.fill();
+            largeMapCtx.fillStyle = 'rgba(102, 252, 241, 0.7)';
+            largeMapCtx.font = 'bold 8px "Orbitron", monospace';
+            largeMapCtx.fillText(bot.name, bx, by - 9);
+        });
+
+        // Draw offline ghost rovers
+        largeMapCtx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+        ghostPlayers.forEach(g => {
+            const gx = toScreenX(g.x), gy = toScreenY(g.y);
+            largeMapCtx.beginPath(); largeMapCtx.arc(gx, gy, 3, 0, Math.PI * 2); largeMapCtx.fill();
+            largeMapCtx.font = '8px "Orbitron", monospace';
+            largeMapCtx.fillText(g.name + ' [OFFLINE]', gx, gy - 8);
+        });
+
+        // Draw self dot
+        const selfX = toScreenX(rover.x), selfY = toScreenY(rover.y);
+        largeMapCtx.fillStyle = '#ffd700';
+        largeMapCtx.beginPath(); largeMapCtx.arc(selfX, selfY, 5, 0, Math.PI * 2); largeMapCtx.fill();
+        largeMapCtx.lineWidth = 1;
+        largeMapCtx.strokeStyle = '#fff';
+        largeMapCtx.beginPath(); largeMapCtx.arc(selfX, selfY, 8 + Math.sin(performance.now() * 0.005)*2, 0, Math.PI * 2); largeMapCtx.stroke();
+    }
+
+    // ── RADIO COMMS MESSAGE HANDLING ──
+    const radioLogEl = document.getElementById('radioLog');
+    const radioInputEl = document.getElementById('radioInput');
+
+    function sendRadioMessage() {
+        const msg = radioInputEl.value.trim();
+        if (!msg) return;
+        radioInputEl.value = '';
+
+        // Broadcast to MQTT
+        if (mqttClient && mqttClient.connected) {
+            const payload = { name: astronautName, message: msg, ts: Date.now() };
+            mqttClient.publish(MQTT_TOPIC + '/chat', JSON.stringify(payload));
+        } else {
+            // Local fallback simulation echo
+            addRadioLog(astronautName, msg);
+            
+            // Random bot responds after a second (if any exist)
+            if (botPlayers.length > 0) {
+                setTimeout(() => {
+                    const responder = botPlayers[Math.floor(Math.random() * botPlayers.length)];
+                    if (responder) {
+                        const botAcks = ["Copy that, pilot.", "Roger that.", "Confirming coordinates.", "Mined minerals on route.", "Acknowledge transmission."];
+                        addRadioLog(responder.name, botAcks[Math.floor(Math.random()*botAcks.length)]);
+                    }
+                }, 1000 + Math.random()*1500);
+            }
+        }
+    }
+
+    // Capture enter key inside radio input
+    radioInputEl.addEventListener('keydown', e => {
+        if (e.code === 'Enter') {
+            sendRadioMessage();
+        }
+    });
+
+    function publishRadioMessage(msg) {
+        if (mqttClient && mqttClient.connected) {
+            const payload = { name: 'SYSTEM', message: msg, ts: Date.now() };
+            mqttClient.publish(MQTT_TOPIC + '/chat', JSON.stringify(payload));
+        }
+    }
+
+    function addRadioLog(sender, text) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'radio-msg';
+        
+        let senderCol = 'var(--accent)';
+        if (sender === astronautName) senderCol = '#ffd700';
+        else if (sender === 'SYSTEM') senderCol = 'var(--danger)';
+        else if (sender.includes('bot')) senderCol = '#ffb703';
+
+        msgDiv.innerHTML = `<span class="radio-sender" style="color:${senderCol}">[${sender}]</span> ${text}`;
+        radioLogEl.appendChild(msgDiv);
+        radioLogEl.scrollTop = radioLogEl.scrollHeight; // autoscroll
+    }
+</script>
+</body>
+</html>

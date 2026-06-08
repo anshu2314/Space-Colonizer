@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resource Management - Space Colonizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(45deg, #66fcf1, #45a29e);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.4);
+        }
+
+        .resource-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(6, 18, 36, 0.8);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid #66fcf1;
+            box-shadow: 0 0 30px rgba(102, 252, 241, 0.2);
+        }
+
+        .resource-bar {
+            margin: 15px 0;
+        }
+
+        .progress {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 8px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #66fcf1, #45a29e);
+            width: 0%;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shine 2s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .modern-resources {
+            margin: 25px 0;
+        }
+
+        .resource-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .resource-card {
+            position: relative;
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 2px solid transparent;
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .resource-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            padding: 2px;
+            background: linear-gradient(135deg, #66fcf1, #45a29e, #66fcf1);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .resource-card:hover::before {
+            opacity: 1;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(102, 252, 241, 0.3);
+        }
+
+        .resource-icon {
+            font-size: 3em;
+            filter: drop-shadow(0 0 10px rgba(102, 252, 241, 0.5));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .resource-info {
+            flex: 1;
+        }
+
+        .resource-name {
+            color: #66fcf1;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .resource-count {
+            color: #fff;
+            font-size: 2em;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.3);
+        }
+
+        .resource-glow {
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: glow 3s ease-in-out infinite alternate;
+        }
+
+        .iron-glow {
+            background: radial-gradient(circle, #ff6b6b, transparent);
+        }
+
+        .wood-glow {
+            background: radial-gradient(circle, #4ecdc4, transparent);
+        }
+
+        .metal-glow {
+            background: radial-gradient(circle, #ffe66d, transparent);
+        }
+
+        .water-glow {
+            background: radial-gradient(circle, #4fc3f7, transparent);
+        }
+
+        @keyframes glow {
+            from { opacity: 0.3; transform: translateY(-50%) scale(0.8); }
+            to { opacity: 0.8; transform: translateY(-50%) scale(1.2); }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .gather-btn, .tools-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 30px;
+            background: linear-gradient(135deg, #66fcf1, #45a29e);
+            border: none;
+            border-radius: 35px;
+            color: #000;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(102, 252, 241, 0.4);
+        }
+
+        .gather-btn:hover, .tools-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(102, 252, 241, 0.5);
+        }
+
+        .btn-icon {
+            font-size: 1.4em;
+            filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.4));
+        }
+
+        .tools-btn {
+            background: linear-gradient(135deg, #45a29e, #66fcf1);
+        }
+
+        .resource-tools .tool-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border-radius: 15px;
+            border: 1px solid rgba(102, 252, 241, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .resource-tools button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 15px 20px;
+            font-size: 1em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .launch-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(6, 18, 36, 0.9);
+            border: 1px solid #66fcf1;
+            border-radius: 8px;
+            padding: 15px 25px;
+            color: #66fcf1;
+            font-size: 1.1em;
+            z-index: 2000;
+            animation: slideUp 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.3);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        h1, h2, h3 {
+            color: #66fcf1;
+            text-shadow: 0 0 15px rgba(102, 252, 241, 0.4);
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, rgba(23, 38, 63, 0.9), rgba(13, 28, 53, 0.9));
+            border: 1px solid rgba(102, 252, 241, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 252, 241, 0.3);
+            border-color: rgba(102, 252, 241, 0.6);
+        }
+
+        .tool-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tool-level {
+            background: linear-gradient(135deg, #66fcf1, #45a29e);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBackToGame()">← Back to Game</button>
+    
+    <div class="header">
+        <h1>🏭 Resource Management Center</h1>
+        <p>Manage your resources and upgrade your tools</p>
+    </div>
+
+    <div class="resource-container">
+        <h3>⚡ Mission Resources</h3>
+        <div class="resource-bar">
+            <span>🛢️ Fuel — <span id="fuelAmount" style="color:#66fcf1;font-family:monospace;font-weight:bold;">0</span> units</span>
+            <div class="progress">
+                <div class="progress-fill" id="fuelProgress"></div>
+            </div>
+        </div>
+        <div class="resource-bar">
+            <span>🫁 Oxygen</span>
+            <div class="progress">
+                <div class="progress-fill" id="oxygenProgress"></div>
+            </div>
+        </div>
+        
+        <div class="modern-resources">
+            <h4 style="color: #66fcf1; margin-bottom: 25px; text-align: center; font-size: 1.4em;">🏗️ Construction Materials</h4>
+            <div class="resource-cards-grid">
+                <div class="resource-card iron-card">
+                    <div class="resource-icon">⚙️</div>
+                    <div class="resource-info">
+                        <div class="resource-name">Iron</div>
+                        <div class="resource-count" id="ironCount">0</div>
+                    </div>
+                    <div class="resource-glow iron-glow"></div>
+                </div>
+                <div class="resource-card wood-card">
+                    <div class="resource-icon">🌲</div>
+                    <div class="resource-info">
+                        <div class="resource-name">Wood</div>
+                        <div class="resource-count" id="woodCount">0</div>
+                    </div>
+                    <div class="resource-glow wood-glow"></div>
+                </div>
+                <div class="resource-card metal-card">
+                    <div class="resource-icon">🔩</div>
+                    <div class="resource-info">
+                        <div class="resource-name">Metal</div>
+                        <div class="resource-count" id="metalCount">0</div>
+                    </div>
+                    <div class="resource-glow metal-glow"></div>
+                </div>
+                <div class="resource-card water-card">
+                    <div class="resource-icon">💧</div>
+                    <div class="resource-info">
+                        <div class="resource-name">Water</div>
+                        <div class="resource-count" id="waterCount">0</div>
+                    </div>
+                    <div class="resource-glow water-glow"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <button onclick="gatherResources()" class="gather-btn">
+                <span class="btn-icon">⛏️</span>
+                Gather Resources
+            </button>
+            <button onclick="toggleSection('resourceTools')" class="tools-btn">
+                <span class="btn-icon">🔧</span>
+                Resource Tools
+            </button>
+        </div>
+        
+        <div id="resourceTools" class="resource-tools hidden">
+            <h3 style="text-align: center; margin-bottom: 20px;">🔧 Resource Tools</h3>
+            
+            <div class="tool-card" onclick="openToolPage('wood')">
+                <div class="tool-info">
+                    <div>
+                        <h4>🌲 Woodcutter</h4>
+                        <p>Automatically generates wood resources</p>
+                    </div>
+                    <div class="tool-level" id="woodLevel">Level 0</div>
+                </div>
+            </div>
+            
+            <div class="tool-card" onclick="openToolPage('water')">
+                <div class="tool-info">
+                    <div>
+                        <h4>💧 Water Absorber</h4>
+                        <p>Automatically generates water resources</p>
+                    </div>
+                    <div class="tool-level" id="waterLevel">Level 0</div>
+                </div>
+            </div>
+            
+            <div class="tool-card" onclick="openToolPage('metal')">
+                <div class="tool-info">
+                    <div>
+                        <h4>🔩 Metal Extractor</h4>
+                        <p>Automatically generates metal resources</p>
+                    </div>
+                    <div class="tool-level" id="metalLevel">Level 0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/resource-state.js"></script>
+    <script>
+        // Initialize resource system
+        window.onload = function() {
+            ResourceState.load();
+            updateResourceCounts();
+            updateToolLevels();
+            
+            // Start resource generation from tools every second
+            setInterval(generateResourcesFromTools, 1000);
+            
+            console.log('🚀 Resource Management loaded!');
+        }
+
+        // GATHER RESOURCES - Adds +15 Fuel and +10 to each construction material
+        function gatherResources() {
+            console.log('⛏️ Gathering resources...');
+            
+            // Add fuel (numeric, not capped)
+            ResourceState.resources.fuel = (ResourceState.resources.fuel || 0) + 15;
+
+            if (ResourceState.resources.oxygen < 100) {
+                ResourceState.resources.oxygen += Math.floor(Math.random() * 15) + 5;
+                if (ResourceState.resources.oxygen > 100) ResourceState.resources.oxygen = 100;
+                document.getElementById('oxygenProgress').style.width = ResourceState.resources.oxygen + '%';
+            }
+            
+            // Add +10 to each construction material
+            ResourceState.resources.iron += 10;
+            ResourceState.resources.wood += 10;
+            ResourceState.resources.metal += 10;
+            ResourceState.resources.water += 10;
+            
+            // Save state and update displays
+            ResourceState.save();
+            updateResourceCounts();
+            
+            // Show blue notification
+            showNotification('✅ Gathered +15 Fuel, +10 Iron, +10 Wood, +10 Metal, +10 Water!');
+            
+            console.log('📊 Resources after gathering:', ResourceState.resources);
+        }
+
+        // GENERATE RESOURCES FROM TOOLS - Runs every second
+        function generateResourcesFromTools() {
+            let anyGeneration = false;
+            
+            Object.entries(ResourceState.tools).forEach(([resourceType, tool]) => {
+                if (tool.level > 0) {
+                    const generation = tool.level * 2; // Level 1 = 2/sec, Level 2 = 4/sec, etc.
+                    const oldAmount = ResourceState.resources[resourceType];
+                    ResourceState.resources[resourceType] += generation;
+                    anyGeneration = true;
+                    console.log(`🏭 ${resourceType} tool level ${tool.level} generated ${generation} ${resourceType} (${oldAmount} → ${ResourceState.resources[resourceType]})`);
+                }
+            });
+            
+            if (anyGeneration) {
+                ResourceState.save();
+                updateResourceCounts();
+            }
+        }
+
+        // UPDATE RESOURCE COUNTS - Updates all resource displays
+        function updateResourceCounts() {
+            document.getElementById('ironCount').textContent = ResourceState.resources.iron;
+            document.getElementById('woodCount').textContent = ResourceState.resources.wood;
+            document.getElementById('metalCount').textContent = ResourceState.resources.metal;
+            document.getElementById('waterCount').textContent = ResourceState.resources.water;
+            // Fuel — real numeric
+            const fuel = Math.floor(ResourceState.resources.fuel || 0);
+            const fuelAmtEl = document.getElementById('fuelAmount');
+            if (fuelAmtEl) fuelAmtEl.textContent = fuel;
+            // Progress bar: 200 units = full bar
+            document.getElementById('fuelProgress').style.width = Math.min(100, (fuel / 200) * 100) + '%';
+        }
+
+        // UPDATE TOOL LEVELS - Updates tool level displays
+        function updateToolLevels() {
+            document.getElementById('woodLevel').textContent = `Level ${ResourceState.tools.wood.level}`;
+            document.getElementById('waterLevel').textContent = `Level ${ResourceState.tools.water.level}`;
+            document.getElementById('metalLevel').textContent = `Level ${ResourceState.tools.metal.level}`;
+        }
+
+        // SHOW NOTIFICATION - Shows blue notification messages
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = 'launch-notification';
+            
+            if (type === 'error') {
+                notification.style.borderColor = '#ff4444';
+                notification.style.color = '#ff4444';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            console.log(`📢 Notification: ${message}`);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 3000);
+        }
+
+        // TOGGLE SECTION - Shows/hides tool sections
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.toggle('hidden');
+                console.log(`🔄 Toggled section: ${sectionId}`);
+            }
+        }
+
+        // NAVIGATION FUNCTIONS
+        function goBackToGame() {
+            window.location.href = 'game.html';
+        }
+
+        function openToolPage(toolType) {
+            window.location.href = `tool-${toolType}.html`;
+        }
+    </script>
+</body>
+</html>

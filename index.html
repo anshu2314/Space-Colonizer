@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Colonizer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .stars video {
+            position: absolute;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        .stars:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
+        }
+
+        .welcome-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+
+        .welcome-card {
+            background: rgba(23, 38, 63, 0.75);
+            border: 2px solid #66fcf1;
+            border-radius: 20px;
+            padding: 40px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(102, 252, 241, 0.3);
+            transform-style: preserve-3d;
+            animation: float 6s ease-in-out infinite;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            box-shadow: 0 0 25px rgba(102, 252, 241, 0.5);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotateX(0); }
+            50% { transform: translateY(-20px) rotateX(5deg); }
+        }
+
+        h1 {
+            color: #66fcf1;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px rgba(102, 252, 241, 0.5);
+        }
+
+        .input-group {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+
+        input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(102, 252, 241, 0.3);
+        }
+
+        .start-btn {
+            margin-top: 30px;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            background: linear-gradient(45deg, #66fcf1, #45a29e);
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.5);
+        }
+
+        .input-group::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .company-input::before {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/NASA_logo.svg/1200px-NASA_logo.svg.png');
+        }
+
+        .commander-input::before {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NASA_astronaut_icon.svg/1024px-NASA_astronaut_icon.svg.png');
+        }
+    </style>
+</head>
+<body>
+    <div class="stars">
+        <video autoplay muted loop playsinline>
+            <source src="./192935-893872011_medium.mp4" type="video/mp4">
+        </video>
+    </div>
+    <div class="welcome-container">
+        <div class="welcome-card">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/As08-16-2593.jpg/1024px-As08-16-2593.jpg" 
+                 alt="Space Colonizer Logo" 
+                 class="logo">
+            <h1>Space Colonizer</h1>
+            <div class="input-group company-input">
+                <input type="text" id="companyName" placeholder="Enter Company Name" autocomplete="off">
+            </div>
+            <div class="input-group commander-input">
+                <input type="text" id="userName" placeholder="Enter Commander Name" autocomplete="off">
+            </div>
+            <button class="start-btn" onclick="startMission()">Begin Mission</button>
+        </div>
+    </div>
+
+    <script>
+        function startMission() {
+            const companyName = document.getElementById('companyName').value.trim();
+            const commanderName = document.getElementById('userName').value.trim();
+            
+            // Check if both fields are filled
+            if (!companyName || !commanderName) {
+                alert('Please enter both Company Name and Commander Name to begin your mission!');
+                return;
+            }
+            
+            // Store the values in sessionStorage (resets when browser closes)
+            sessionStorage.setItem('companyName', companyName);
+            sessionStorage.setItem('commanderName', commanderName);
+            
+            // Redirect to game.html
+            window.location.href = 'game.html';
+        }
+        
+        // Allow Enter key to submit the form
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                startMission();
+            }
+        });
+    </script>
+</body>
+</html>

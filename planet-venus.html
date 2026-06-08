@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venus Exploration — Space Colonizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{--accent:#ffc649;--accent2:#d4941a;--bg:#130900;--panel:rgba(20,10,0,0.92);--border:rgba(255,198,73,0.32);--glow:rgba(255,198,73,0.22);}
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Rajdhani',sans-serif;background:var(--bg);color:#fff;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+        .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:rgba(20,10,0,0.97);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10;}
+        .topbar-left{display:flex;align-items:center;gap:12px;}
+        .back-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:25px;padding:9px 20px;color:#000;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.88em;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all 0.3s;}
+        .back-btn:hover{transform:scale(1.05);box-shadow:0 0 20px var(--glow);}
+        .planet-title{font-family:'Orbitron',monospace;font-size:1.5em;color:var(--accent);text-shadow:0 0 15px var(--glow);}
+        .colony-badge{background:rgba(255,198,73,0.08);border:1px solid var(--border);border-radius:12px;padding:7px 16px;font-family:'Orbitron',monospace;font-size:0.82em;color:var(--accent);}
+        .main-layout{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;}
+        .planet-panel{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#201000 0%,#0a0500 70%);overflow:hidden;}
+        #planetCanvas{filter:drop-shadow(0 0 45px rgba(255,198,73,0.35));}
+        .vehicle-badges{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:30px;padding:8px 18px;font-family:'Orbitron',monospace;font-size:0.72em;color:var(--accent);display:flex;gap:18px;}
+        .stats-panel{padding:22px;background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;gap:18px;scrollbar-width:thin;scrollbar-color:var(--accent) rgba(255,198,73,0.1);}
+        .stats-panel::-webkit-scrollbar{width:5px;}
+        .stats-panel::-webkit-scrollbar-thumb{background:var(--accent);border-radius:3px;}
+        .sec-title{font-family:'Orbitron',monospace;font-size:0.9em;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .sec-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+        .prog-card{background:linear-gradient(135deg,rgba(40,20,2,0.8),rgba(25,12,0,0.8));border:1px solid var(--border);border-radius:13px;padding:16px;margin-bottom:10px;transition:all 0.3s;}
+        .prog-card:hover{transform:translateY(-2px);box-shadow:0 6px 18px var(--glow);}
+        .prog-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+        .prog-title{font-size:0.98em;font-weight:600;color:#ffe0a0;}
+        .prog-count{font-family:'Orbitron',monospace;font-size:0.8em;color:var(--accent);background:rgba(255,198,73,0.1);padding:2px 9px;border-radius:20px;}
+        .prog-track{height:9px;background:rgba(255,255,255,0.08);border-radius:5px;overflow:hidden;margin-bottom:6px;}
+        .prog-fill{height:100%;border-radius:5px;transition:width 1s ease;position:relative;overflow:hidden;}
+        .prog-fill.map{background:linear-gradient(90deg,#ffc649,#d4941a);}
+        .prog-fill.exp{background:linear-gradient(90deg,#ffecb3,#ff8f00);}
+        .prog-fill.min{background:linear-gradient(90deg,#ffe082,#e65100);}
+        .prog-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);animation:shimmer 2s infinite;}
+        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+        .prog-pct{font-size:0.82em;color:rgba(255,255,255,0.45);text-align:right;}
+        .colony-card{background:linear-gradient(135deg,rgba(60,25,0,0.9),rgba(30,12,0,0.9));border:1px solid rgba(255,198,73,0.4);border-radius:13px;padding:18px;}
+        .colony-track{height:15px;background:rgba(255,255,255,0.08);border-radius:8px;overflow:hidden;margin:10px 0;}
+        .colony-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#d4941a,#ffc649,#fff7a0);transition:width 1s ease;position:relative;overflow:hidden;}
+        .colony-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);animation:shimmer 1.5s infinite;}
+        .colony-pct{font-family:'Orbitron',monospace;font-size:1.4em;text-align:center;color:#fff;text-shadow:0 0 18px rgba(255,198,73,0.5);}
+        .goal-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.92em;}
+        .goal-chk{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.72em;flex-shrink:0;}
+        .goal-chk.done{background:rgba(255,198,73,0.2);color:var(--accent);border:1px solid var(--accent);}
+        .goal-chk.pending{background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.15);}
+        .goal-txt{flex:1;color:rgba(255,255,255,0.8);}
+        .goal-prog{font-family:'Orbitron',monospace;font-size:0.78em;color:rgba(255,255,255,0.4);}
+        .res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+        .res-mini{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:9px;padding:9px 12px;display:flex;align-items:center;gap:9px;}
+        .res-mini-icon{font-size:1.25em;}
+        .res-mini-name{font-size:0.72em;color:rgba(255,255,255,0.4);text-transform:uppercase;}
+        .res-mini-val{font-family:'Orbitron',monospace;font-size:0.95em;color:#fff;}
+        .inv-strip{display:flex;gap:10px;padding:10px 14px;background:rgba(255,198,73,0.05);border:1px solid var(--border);border-radius:12px;}
+        .inv-item{flex:1;text-align:center;}
+        .inv-num{font-family:'Orbitron',monospace;font-size:1.1em;color:var(--accent);}
+        .inv-lbl{font-size:0.7em;color:rgba(255,255,255,0.4);text-transform:uppercase;}
+        .am-bar{background:rgba(20,10,0,0.85);border:1px solid var(--border);border-radius:11px;padding:10px 14px;font-size:0.82em;}
+        .am-item{display:flex;align-items:center;gap:8px;padding:4px 0;}
+        .am-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1s infinite;flex-shrink:0;}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+        .am-txt{flex:1;color:rgba(255,255,255,0.7);}
+        .am-pct{font-family:'Orbitron',monospace;font-size:0.78em;color:var(--accent);}
+        .bottom-bar{padding:14px 24px;background:rgba(20,10,0,0.98);border-top:1px solid var(--border);display:flex;justify-content:center;gap:16px;flex-shrink:0;}
+        .launch-btn{display:flex;align-items:center;gap:10px;padding:13px 36px;background:linear-gradient(135deg,#d4941a,#ffc649);border:none;border-radius:35px;color:#000;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s;box-shadow:0 6px 25px rgba(212,148,26,0.4);}
+        .launch-btn:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 10px 35px rgba(212,148,26,0.6);}
+        .colonize-btn{display:none;align-items:center;gap:10px;padding:13px 36px;background:linear-gradient(135deg,#ffd700,#ff8c00);border:none;border-radius:35px;color:#000;font-family:'Rajdhani',sans-serif;font-weight:900;font-size:1.05em;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s;box-shadow:0 6px 30px rgba(255,215,0,0.5);animation:pulse-gold 2s infinite;}
+        .colonize-btn.show{display:flex;}
+        @keyframes pulse-gold{0%,100%{box-shadow:0 6px 30px rgba(255,215,0,0.5)}50%{box-shadow:0 6px 50px rgba(255,215,0,0.9)}}
+        .modal-overlay{position:fixed;inset:0;z-index:500;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);}
+        .modal-overlay.open{display:flex;}
+        .mission-modal{position:relative;width:720px;max-width:96vw;border-radius:22px;overflow:hidden;border:2px solid rgba(255,198,73,0.4);box-shadow:0 0 60px rgba(0,0,0,0.9);animation:modalIn 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+        @keyframes modalIn{from{transform:scale(0.7) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+        .modal-bg{position:absolute;inset:0;background:url('onmoon.gif') center/cover no-repeat;filter:hue-rotate(40deg);}
+        .modal-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,0,0.85) 0%,rgba(20,10,0,0.65) 50%,rgba(20,10,0,0.9) 100%);}
+        .modal-content{position:relative;z-index:2;padding:28px;}
+        .modal-title{font-family:'Orbitron',monospace;font-size:1.5em;color:var(--accent);text-align:center;text-shadow:0 0 20px var(--glow);margin-bottom:6px;}
+        .modal-sub{text-align:center;color:rgba(255,255,255,0.55);margin-bottom:20px;font-size:0.92em;}
+        .modal-res-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:18px;}
+        .m-res{background:rgba(20,10,0,0.75);border:1px solid var(--border);border-radius:10px;padding:8px 6px;text-align:center;}
+        .m-res-icon{font-size:1.2em;}
+        .m-res-name{font-size:0.62em;color:rgba(255,255,255,0.38);text-transform:uppercase;}
+        .m-res-val{font-family:'Orbitron',monospace;font-size:0.88em;color:var(--accent);}
+        .modal-inv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+        .m-inv-item{background:rgba(255,198,73,0.06);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center;}
+        .m-inv-num{font-family:'Orbitron',monospace;font-size:1.3em;color:var(--accent);}
+        .m-inv-lbl{font-size:0.72em;color:rgba(255,255,255,0.45);text-transform:uppercase;}
+        .m-inv-note{font-size:0.7em;color:rgba(255,200,73,0.7);margin-top:3px;}
+        .mission-options{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+        .m-opt{background:rgba(20,10,0,0.82);border:2px solid var(--border);border-radius:14px;padding:16px 12px;text-align:center;cursor:pointer;transition:all 0.3s;}
+        .m-opt:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 6px 20px var(--glow);}
+        .m-opt.selected{border-color:var(--accent);background:rgba(255,198,73,0.08);box-shadow:0 0 18px var(--glow);}
+        .mo-icon{font-size:2em;margin-bottom:8px;}
+        .mo-title{font-family:'Orbitron',monospace;font-size:0.82em;color:var(--accent);margin-bottom:6px;}
+        .mo-effect{font-size:0.77em;color:rgba(255,255,255,0.5);margin-bottom:10px;line-height:1.4;}
+        .mo-cost{background:rgba(255,255,255,0.05);border-radius:7px;padding:7px;font-size:0.73em;}
+        .mo-cost-row{color:rgba(255,255,255,0.55);padding:1px 0;}
+        .mo-cost-row span{color:#fff;font-weight:600;}
+        .mo-inv-tag{margin-top:6px;background:rgba(255,198,73,0.18);border-radius:6px;padding:3px 6px;font-size:0.72em;color:var(--accent);font-weight:700;}
+        .modal-launch-btn{width:100%;padding:13px;background:linear-gradient(135deg,#d4941a,#ffc649);border:none;border-radius:28px;color:#000;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.05em;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s;}
+        .modal-launch-btn:hover{transform:scale(1.02);box-shadow:0 6px 22px rgba(212,148,26,0.5);}
+        .modal-close{position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:32px;height:32px;color:#fff;font-size:1em;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;z-index:10;}
+        .modal-close:hover{background:rgba(255,80,80,0.3);}
+        .notif{position:fixed;bottom:26px;right:26px;background:rgba(20,10,0,0.97);border:1px solid var(--accent);border-radius:11px;padding:12px 20px;color:var(--accent);font-size:0.95em;z-index:9999;animation:slideUp 0.3s ease-out,fadeOut 0.3s ease-out 2.7s forwards;box-shadow:0 0 18px var(--glow);}
+        .notif.error{border-color:#ff4444;color:#ff4444;}
+        @keyframes slideUp{from{transform:translateY(80px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes fadeOut{to{opacity:0;visibility:hidden}}
+        .stars-bg{position:fixed;inset:0;z-index:-1;pointer-events:none;}
+        #celebOverlay{position:fixed;inset:0;z-index:9000;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,0.92);}
+        #celebOverlay.show{display:flex;}
+        #celebCanvas{position:absolute;inset:0;width:100%;height:100%;}
+        .celeb-content{position:relative;z-index:2;text-align:center;animation:celebIn 0.8s cubic-bezier(0.34,1.56,0.64,1);}
+        @keyframes celebIn{from{transform:scale(0.3);opacity:0}to{transform:scale(1);opacity:1}}
+        .celeb-badge{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,#ffd700,#ffa000);border:6px solid #fff;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 28px;box-shadow:0 0 60px rgba(255,215,0,0.8);animation:badge-pulse 2s ease-in-out infinite;}
+        @keyframes badge-pulse{0%,100%{box-shadow:0 0 40px rgba(255,198,73,0.6)}50%{box-shadow:0 0 80px rgba(255,215,0,1)}}
+        .celeb-badge-icon{font-size:4em;}
+        .celeb-badge-text{font-family:'Orbitron',monospace;font-size:0.6em;color:#000;font-weight:900;letter-spacing:1px;margin-top:4px;}
+        .celeb-title{font-family:'Orbitron',monospace;font-size:2.2em;color:#ffd700;text-shadow:0 0 30px rgba(255,215,0,0.8);margin-bottom:10px;}
+        .celeb-sub{font-size:1.1em;color:rgba(255,255,255,0.7);margin-bottom:30px;}
+        .celeb-close-btn{padding:14px 40px;background:linear-gradient(135deg,#ffd700,#ff8c00);border:none;border-radius:35px;color:#000;font-family:'Rajdhani',sans-serif;font-weight:900;font-size:1.1em;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all 0.3s;}
+        .celeb-close-btn:hover{transform:scale(1.06);}
+        .celeb-stats{display:flex;gap:24px;justify-content:center;margin-bottom:24px;}
+        .celeb-stat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:12px;padding:12px 20px;text-align:center;}
+        .celeb-stat-num{font-family:'Orbitron',monospace;font-size:1.5em;color:#ffd700;}
+        .celeb-stat-lbl{font-size:0.78em;color:rgba(255,255,255,0.5);text-transform:uppercase;}
+    </style>
+</head>
+<body>
+<canvas class="stars-bg" id="starsBg"></canvas>
+<div class="topbar">
+    <div class="topbar-left">
+        <button class="back-btn" onclick="goBack()">← Back</button>
+        <div class="planet-title">☁️ Venus Exploration</div>
+    </div>
+    <div class="colony-badge">Colonization: <span id="colonyPct">0</span>%</div>
+</div>
+<div class="main-layout">
+    <div class="planet-panel">
+        <canvas id="planetCanvas" width="400" height="400"></canvas>
+        <div class="vehicle-badges">
+            <div>🛰️ <span id="satBadge">0</span></div>
+            <div>🚗 <span id="rovBadge">0</span></div>
+            <div>🛬 <span id="lanBadge">0</span></div>
+        </div>
+    </div>
+    <div class="stats-panel">
+        <div id="amSection" style="display:none">
+            <div class="sec-title">⚡ Active Missions</div>
+            <div class="am-bar" id="amList"></div>
+        </div>
+        <div>
+            <div class="sec-title">🌐 Colonization</div>
+            <div class="colony-card">
+                <div class="colony-pct"><span id="colonyPctBig">0</span>%</div>
+                <div class="colony-track"><div class="colony-fill" id="colonyFill" style="width:0%"></div></div>
+                <div id="colonizedMsg" style="display:none;text-align:center;color:#ffd700;font-family:'Orbitron',monospace;font-size:0.88em;letter-spacing:2px;">🎉 VENUS COLONIZED!</div>
+            </div>
+        </div>
+        <div>
+            <div class="sec-title">📡 Progress</div>
+            <div class="prog-card"><div class="prog-hdr"><div class="prog-title">🛰️ Satellite Mapping</div><div class="prog-count" id="satCount">0/5</div></div><div class="prog-track"><div class="prog-fill map" id="mapFill" style="width:0%"></div></div><div class="prog-pct" id="mapPct">0%</div></div>
+            <div class="prog-card"><div class="prog-hdr"><div class="prog-title">🚗 Rover Exploration</div><div class="prog-count" id="rovCount">0/7</div></div><div class="prog-track"><div class="prog-fill exp" id="expFill" style="width:0%"></div></div><div class="prog-pct" id="expPct">0%</div></div>
+            <div class="prog-card"><div class="prog-hdr"><div class="prog-title">🛬 Mineral Survey</div><div class="prog-count" id="lanCount">0/7</div></div><div class="prog-track"><div class="prog-fill min" id="minFill" style="width:0%"></div></div><div class="prog-pct" id="minPct">0%</div></div>
+        </div>
+        <div>
+            <div class="sec-title">🎯 Goals</div>
+            <div class="goal-item"><div class="goal-chk pending" id="gchk-sat">○</div><div class="goal-txt">5 Satellites — Planetary Mapping</div><div class="goal-prog" id="gp-sat">0/5</div></div>
+            <div class="goal-item"><div class="goal-chk pending" id="gchk-rov">○</div><div class="goal-txt">7 Rovers — Surface Exploration</div><div class="goal-prog" id="gp-rov">0/7</div></div>
+            <div class="goal-item"><div class="goal-chk pending" id="gchk-lan">○</div><div class="goal-txt">7 Landers — Mineral Survey</div><div class="goal-prog" id="gp-lan">0/7</div></div>
+        </div>
+        <div>
+            <div class="sec-title">🛸 Vehicle Inventory</div>
+            <div class="inv-strip">
+                <div class="inv-item"><div class="inv-num" id="invSat">0</div><div class="inv-lbl">Satellites</div></div>
+                <div class="inv-item"><div class="inv-num" id="invRov">0</div><div class="inv-lbl">Rovers</div></div>
+                <div class="inv-item"><div class="inv-num" id="invLan">0</div><div class="inv-lbl">Landers</div></div>
+            </div>
+        </div>
+        <div>
+            <div class="sec-title">⚡ Resources</div>
+            <div class="res-grid">
+                <div class="res-mini"><div class="res-mini-icon">🛢️</div><div><div class="res-mini-name">Fuel</div><div class="res-mini-val" id="resFuel">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">⚙️</div><div><div class="res-mini-name">Iron</div><div class="res-mini-val" id="resIron">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">🌲</div><div><div class="res-mini-name">Wood</div><div class="res-mini-val" id="resWood">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">🔩</div><div><div class="res-mini-name">Metal</div><div class="res-mini-val" id="resMetal">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">💧</div><div><div class="res-mini-name">Water</div><div class="res-mini-val" id="resWater">0</div></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="bottom-bar">
+    <button class="launch-btn" onclick="openModal()">🚀 Launch Mission</button>
+    <button class="colonize-btn" id="colonizeBtn" onclick="startColonization()">☁️ COLONIZE VENUS</button>
+</div>
+
+<!-- MISSION MODAL -->
+<div class="modal-overlay" id="missionModal">
+    <div class="mission-modal">
+        <div class="modal-bg"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <div class="modal-title">🚀 Venus Mission Control</div>
+            <div class="modal-sub">Use inventory vehicles for free, or purchase &amp; launch with resources.</div>
+            <div class="modal-res-grid">
+                <div class="m-res"><div class="m-res-icon">🛢️</div><div class="m-res-name">Fuel</div><div class="m-res-val" id="mFuel">0</div></div>
+                <div class="m-res"><div class="m-res-icon">⚙️</div><div class="m-res-name">Iron</div><div class="m-res-val" id="mIron">0</div></div>
+                <div class="m-res"><div class="m-res-icon">🌲</div><div class="m-res-name">Wood</div><div class="m-res-val" id="mWood">0</div></div>
+                <div class="m-res"><div class="m-res-icon">🔩</div><div class="m-res-name">Metal</div><div class="m-res-val" id="mMetal">0</div></div>
+                <div class="m-res"><div class="m-res-icon">💧</div><div class="m-res-name">Water</div><div class="m-res-val" id="mWater">0</div></div>
+                <div class="m-res"><div class="m-res-icon">🔋</div><div class="m-res-name">Oxygen</div><div class="m-res-val" id="mOxy">0</div></div>
+            </div>
+            <div class="modal-inv">
+                <div class="m-inv-item"><div class="m-inv-num" id="miSat">0</div><div class="m-inv-lbl">🛰️ Satellites</div><div class="m-inv-note" id="miSatNote"></div></div>
+                <div class="m-inv-item"><div class="m-inv-num" id="miRov">0</div><div class="m-inv-lbl">🚗 Rovers</div><div class="m-inv-note" id="miRovNote"></div></div>
+                <div class="m-inv-item"><div class="m-inv-num" id="miLan">0</div><div class="m-inv-lbl">🛬 Landers</div><div class="m-inv-note" id="miLanNote"></div></div>
+            </div>
+            <div class="mission-options">
+                <div class="m-opt" id="opt-satellite" onclick="selectMission('satellite')">
+                    <div class="mo-icon">🛰️</div><div class="mo-title">Satellite</div>
+                    <div class="mo-effect">Maps the surface through thick clouds.</div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>18</span></div><div class="mo-cost-row">⚙️ Iron <span>25</span></div><div class="mo-cost-row">🌲 Wood <span>22</span></div><div class="mo-cost-row">🔩 Metal <span>18</span></div></div>
+                    <div class="mo-inv-tag" id="inv-tag-satellite"></div>
+                </div>
+                <div class="m-opt" id="opt-rover" onclick="selectMission('rover')">
+                    <div class="mo-icon">🚗</div><div class="mo-title">Rover</div>
+                    <div class="mo-effect">Survives extreme heat to explore surface.</div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>22</span></div><div class="mo-cost-row">⚙️ Iron <span>35</span></div><div class="mo-cost-row">🌲 Wood <span>28</span></div><div class="mo-cost-row">🔩 Metal <span>22</span></div></div>
+                    <div class="mo-inv-tag" id="inv-tag-rover"></div>
+                </div>
+                <div class="m-opt" id="opt-lander" onclick="selectMission('lander')">
+                    <div class="mo-icon">🛬</div><div class="mo-title">Lander</div>
+                    <div class="mo-effect">Surveys volcanic minerals.</div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>28</span></div><div class="mo-cost-row">⚙️ Iron <span>45</span></div><div class="mo-cost-row">🌲 Wood <span>35</span></div><div class="mo-cost-row">🔩 Metal <span>28</span></div></div>
+                    <div class="mo-inv-tag" id="inv-tag-lander"></div>
+                </div>
+            </div>
+            <button class="modal-launch-btn" onclick="confirmLaunch()">🚀 Confirm Launch</button>
+        </div>
+    </div>
+</div>
+
+<!-- CELEBRATION -->
+<div id="celebOverlay">
+    <canvas id="celebCanvas"></canvas>
+    <div class="celeb-content">
+        <div class="celeb-badge"><div class="celeb-badge-icon">☁️</div><div class="celeb-badge-text">COLONIZED</div></div>
+        <div class="celeb-title">VENUS COLONIZED!</div>
+        <div class="celeb-sub">Humanity has conquered the most hostile planet in the solar system!</div>
+        <div class="celeb-stats">
+            <div class="celeb-stat"><div class="celeb-stat-num" id="cs-sat">0</div><div class="celeb-stat-lbl">Satellites</div></div>
+            <div class="celeb-stat"><div class="celeb-stat-num" id="cs-rov">0</div><div class="celeb-stat-lbl">Rovers</div></div>
+            <div class="celeb-stat"><div class="celeb-stat-num" id="cs-lan">0</div><div class="celeb-stat-lbl">Landers</div></div>
+        </div>
+        <button class="celeb-close-btn" onclick="finishColonization()">🚀 Continue to Next Mission</button>
+    </div>
+</div>
+
+<script src="js/resource-state.js"></script>
+<script>
+const PLANET='Venus';
+let selectedMission=null,planetAngle=0,activeMissionTimers={},fireworksRunning=false;
+
+window.onload=function(){
+    if(!sessionStorage.getItem('companyName')){window.location.href='index.html';return;}
+    ResourceState.load();initStars();animatePlanet();updateAll();
+    setInterval(()=>{ResourceState.tickTools();updateAll();},1000);
+};
+function goBack(){window.location.href='game.html';}
+function updateAll(){
+    const m=ResourceState.missions[PLANET],r=ResourceState.resources,v=ResourceState.vehicles;
+    document.getElementById('satBadge').textContent=m.satellites;
+    document.getElementById('rovBadge').textContent=m.rovers;
+    document.getElementById('lanBadge').textContent=m.landers;
+    setBar('mapFill',m.mappingProgress);setTxt('mapPct',Math.round(m.mappingProgress)+'%');
+    setBar('expFill',m.explorationProgress);setTxt('expPct',Math.round(m.explorationProgress)+'%');
+    setBar('minFill',m.mineralProgress);setTxt('minPct',Math.round(m.mineralProgress)+'%');
+    setTxt('satCount',`${m.satellites}/${m.satelliteGoal}`);setTxt('rovCount',`${m.rovers}/${m.roverGoal}`);setTxt('lanCount',`${m.landers}/${m.landerGoal}`);
+    setGoal('gchk-sat','gp-sat',m.satellites,m.satelliteGoal);setGoal('gchk-rov','gp-rov',m.rovers,m.roverGoal);setGoal('gchk-lan','gp-lan',m.landers,m.landerGoal);
+    const pct=ResourceState.getColonizationPercent(PLANET);
+    setTxt('colonyPct',pct);setTxt('colonyPctBig',pct);setBar('colonyFill',pct);
+    document.getElementById('colonizedMsg').style.display=m.colonized?'block':'none';
+    const cb=document.getElementById('colonizeBtn');if(pct>=100&&!m.colonized)cb.classList.add('show');else cb.classList.remove('show');
+    setTxt('invSat',v.satellites);setTxt('invRov',v.rovers);setTxt('invLan',v.landers);
+    setTxt('resFuel',Math.floor(r.fuel||0));setTxt('resIron',Math.floor(r.iron||0));setTxt('resWood',Math.floor(r.wood||0));setTxt('resMetal',Math.floor(r.metal||0));setTxt('resWater',Math.floor(r.water||0));
+    setTxt('mFuel',Math.floor(r.fuel||0));setTxt('mIron',Math.floor(r.iron||0));setTxt('mWood',Math.floor(r.wood||0));setTxt('mMetal',Math.floor(r.metal||0));setTxt('mWater',Math.floor(r.water||0));setTxt('mOxy',Math.floor(r.oxygen||0));
+    setTxt('miSat',v.satellites);setTxt('miRov',v.rovers);setTxt('miLan',v.landers);
+    [['satellite','satellites'],['rover','rovers'],['lander','landers']].forEach(([type,key])=>{
+        const n=v[key],noteId={satellite:'miSatNote',rover:'miRovNote',lander:'miLanNote'}[type];
+        const ne=document.getElementById(noteId),te=document.getElementById('inv-tag-'+type);
+        if(ne)ne.textContent=n>0?`✅ ${n} ready — FREE!`:'⚠️ None — costs resources';
+        if(te)te.textContent=n>0?`📦 ${n} in stock — FREE`:'';
+    });
+    updateActiveMissionsUI();
+}
+function setBar(id,pct){const el=document.getElementById(id);if(el)el.style.width=Math.min(100,Math.max(0,pct))+'%';}
+function setTxt(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
+function setGoal(ck,gp,c,g){const done=c>=g,el=document.getElementById(ck);if(el){el.className='goal-chk '+(done?'done':'pending');el.textContent=done?'✓':'○';}setTxt(gp,`${Math.min(c,g)}/${g}`);}
+function updateActiveMissionsUI(){const keys=Object.keys(activeMissionTimers),sec=document.getElementById('amSection'),list=document.getElementById('amList');if(!keys.length){sec.style.display='none';return;}sec.style.display='block';list.innerHTML=keys.map(id=>{const am=activeMissionTimers[id],e=Date.now()-am.startTime,p=Math.min(100,Math.round((e/am.duration)*100)),r=Math.max(0,Math.ceil((am.duration-e)/1000));return`<div class="am-item"><div class="am-dot"></div><div class="am-txt">${am.label} → Venus</div><div class="am-pct">${p}% · ${r}s</div></div>`;}).join('');}
+function openModal(){selectedMission=null;document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected'));document.getElementById('missionModal').classList.add('open');updateAll();}
+function closeModal(){document.getElementById('missionModal').classList.remove('open');}
+function selectMission(t){selectedMission=t;document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected'));document.getElementById('opt-'+t).classList.add('selected');}
+function confirmLaunch(){
+    if(!selectedMission){showNotif('Select a mission type first!','error');return;}
+    const labels={satellite:'🛰️ Satellite',rover:'🚗 Rover',lander:'🛬 Lander'};
+    const vehicleKey=selectedMission+'s',hasInv=(ResourceState.vehicles[vehicleKey]||0)>0;
+    const missionId=Date.now()+'_'+Math.random();
+    let result;
+    if(hasInv){ResourceState.useVehicleFromInventory(selectedMission);result=ResourceState.launchMission(PLANET,selectedMission,updateAll,(mData)=>{delete activeMissionTimers[missionId];showNotif(`✅ ${labels[selectedMission]} complete!`);updateAll();},true);}
+    else{result=ResourceState.launchMission(PLANET,selectedMission,updateAll,(mData)=>{delete activeMissionTimers[missionId];showNotif(`✅ ${labels[selectedMission]} complete!`);updateAll();});}
+    if(!result.success){showNotif('❌ '+result.message,'error');return;}
+    activeMissionTimers[missionId]={type:selectedMission,label:labels[selectedMission],startTime:Date.now(),duration:result.durationMs};
+    showNotif(hasInv?`📦 Inventory ${selectedMission} launched FREE!`:'🚀 '+result.message);
+    closeModal();updateAll();
+}
+function startColonization(){const m=ResourceState.missions[PLANET];document.getElementById('cs-sat').textContent=m.satellites;document.getElementById('cs-rov').textContent=m.rovers;document.getElementById('cs-lan').textContent=m.landers;document.getElementById('celebOverlay').classList.add('show');startFireworks();}
+function finishColonization(){fireworksRunning=false;document.getElementById('celebOverlay').classList.remove('show');ResourceState.colonizePlanet(PLANET);showNotif('🎉 Venus colonized! Mercury unlocked!');setTimeout(()=>{window.location.href='game.html';},1500);}
+function startFireworks(){const canvas=document.getElementById('celebCanvas');canvas.width=window.innerWidth;canvas.height=window.innerHeight;const ctx=canvas.getContext('2d'),particles=[];fireworksRunning=true;function burst(x,y){const colors=['#ffd700','#ffc649','#ff8c00','#fff','#66fcf1','#ff6b35','#7b2ff7'];for(let i=0;i<80;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*8;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,life:1,decay:0.012+Math.random()*0.015,color:colors[Math.floor(Math.random()*colors.length)],size:2+Math.random()*4,trail:[]});}}let lb=0;function draw(ts){if(!fireworksRunning)return;ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,0,canvas.width,canvas.height);if(ts-lb>600){burst(canvas.width*(0.2+Math.random()*0.6),canvas.height*(0.1+Math.random()*0.5));lb=ts;}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.trail.push({x:p.x,y:p.y});if(p.trail.length>6)p.trail.shift();p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=p.decay;if(p.life<=0){particles.splice(i,1);continue;}ctx.save();p.trail.forEach((pt,ti)=>{ctx.globalAlpha=(ti/p.trail.length)*p.life*0.4;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(pt.x,pt.y,p.size*0.5,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowBlur=10;ctx.shadowColor=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.restore();}requestAnimationFrame(draw);}requestAnimationFrame(draw);}
+
+const pCanvas=document.getElementById('planetCanvas'),pCtx=pCanvas.getContext('2d');
+function animatePlanet(){pCtx.clearRect(0,0,400,400);drawVenus();planetAngle+=0.002;requestAnimationFrame(animatePlanet);}
+function drawVenus(){
+    const cx=200,cy=200,r=160,t=Date.now()*0.001,m=ResourceState.missions[PLANET];
+    const glow=pCtx.createRadialGradient(cx,cy,r*0.8,cx,cy,r*1.7);glow.addColorStop(0,'rgba(255,198,73,0.2)');glow.addColorStop(1,'rgba(255,198,73,0)');pCtx.fillStyle=glow;pCtx.beginPath();pCtx.arc(cx,cy,r*1.7,0,Math.PI*2);pCtx.fill();
+    // Atmospheric haze
+    const atm=pCtx.createRadialGradient(cx,cy,r,cx,cy,r*1.15);atm.addColorStop(0,'rgba(255,160,0,0.3)');atm.addColorStop(1,'rgba(255,160,0,0)');pCtx.fillStyle=atm;pCtx.beginPath();pCtx.arc(cx,cy,r*1.15,0,Math.PI*2);pCtx.fill();
+    // Planet base
+    const grad=pCtx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);grad.addColorStop(0,'#ffe0a0');grad.addColorStop(0.5,'#ffc649');grad.addColorStop(1,'#8b5a00');pCtx.fillStyle=grad;pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.fill();
+    // Rotating cloud bands
+    pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.translate(cx,cy);pCtx.rotate(planetAngle*0.5);
+    for(let i=-4;i<=4;i++){pCtx.fillStyle=`rgba(255,${220+i*5},${100+i*10},0.25)`;pCtx.fillRect(-r,i*r*0.22,r*2,r*0.2);}
+    // Swirl clouds
+    for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2,cx2=Math.cos(a)*r*0.4,cy2=Math.sin(a)*r*0.4;pCtx.fillStyle='rgba(255,255,255,0.12)';pCtx.beginPath();pCtx.arc(cx2,cy2,r*0.25,0,Math.PI*2);pCtx.fill();}
+    pCtx.restore();
+    // Highlight
+    pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();const hl=pCtx.createRadialGradient(cx-r*0.45,cy-r*0.45,0,cx,cy,r);hl.addColorStop(0,'rgba(255,255,255,0.3)');hl.addColorStop(1,'rgba(255,255,255,0)');pCtx.fillStyle=hl;pCtx.fillRect(cx-r,cy-r,r*2,r*2);pCtx.restore();
+    // Satellites
+    for(let i=0;i<m.satellites;i++){const orR=r+28+i*20,ang=t*(0.7+i*0.2)+(i*Math.PI*2/Math.max(m.satellites,1));const sx=cx+Math.cos(ang)*orR,sy=cy+Math.sin(ang)*orR*0.38;pCtx.strokeStyle='rgba(255,198,73,0.2)';pCtx.lineWidth=1;pCtx.beginPath();pCtx.ellipse(cx,cy,orR,orR*0.38,0,0,Math.PI*2);pCtx.stroke();pCtx.fillStyle='#ffc649';pCtx.beginPath();pCtx.arc(sx,sy,5,0,Math.PI*2);pCtx.fill();pCtx.fillStyle='#d4941a';pCtx.fillRect(sx-11,sy-2,7,4);pCtx.fillRect(sx+4,sy-2,7,4);}
+    for(let i=0;i<m.rovers;i++){const a=(i/Math.max(m.rovers,1))*Math.PI*2+planetAngle,rx=cx+Math.cos(a)*r*0.84,ry=cy+Math.sin(a)*r*0.84;pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.fillStyle='#ff8f00';pCtx.fillRect(rx-6,ry-4,12,6);pCtx.fillStyle='#e65100';pCtx.beginPath();pCtx.arc(rx-5,ry+3,2.5,0,Math.PI*2);pCtx.fill();pCtx.beginPath();pCtx.arc(rx+5,ry+3,2.5,0,Math.PI*2);pCtx.fill();pCtx.restore();}
+    for(let i=0;i<m.landers;i++){const a=(i/Math.max(m.landers,1))*Math.PI*2+planetAngle+0.5,lx=cx+Math.cos(a)*r*0.9,ly=cy+Math.sin(a)*r*0.9;pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.strokeStyle='#fff';pCtx.lineWidth=1.5;pCtx.beginPath();pCtx.moveTo(lx,ly);pCtx.lineTo(lx,ly-10);pCtx.stroke();pCtx.fillStyle='#ffc649';pCtx.fillRect(lx,ly-10,7,5);pCtx.restore();}
+}
+function initStars(){const c=document.getElementById('starsBg');c.width=window.innerWidth;c.height=window.innerHeight;const ctx=c.getContext('2d');const stars=Array.from({length:200},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.5+0.2,t:Math.random()*Math.PI*2}));function draw(){ctx.clearRect(0,0,c.width,c.height);const t=Date.now()*0.001;stars.forEach(s=>{const a=Math.max(0,0.25+Math.sin(t+s.t)*0.4);ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});requestAnimationFrame(draw);}draw();window.addEventListener('resize',()=>{c.width=window.innerWidth;c.height=window.innerHeight;});}
+function showNotif(msg,type='success'){const n=document.createElement('div');n.className='notif'+(type==='error'?' error':'');n.textContent=msg;document.body.appendChild(n);setTimeout(()=>{if(n.parentNode)n.remove();},3000);}
+document.getElementById('missionModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('celebOverlay').addEventListener('click',function(e){if(e.target===this){fireworksRunning=false;finishColonization();}});
+</script>
+</body>
+</html>

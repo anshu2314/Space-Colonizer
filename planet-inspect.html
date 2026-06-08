@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspect Planet — Space Colonizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #66fcf1; --accent2: #45a29e; --bg: #020b18; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Rajdhani',sans-serif;
+            background: var(--bg);
+            color:#fff; height:100vh; overflow:hidden;
+            display:flex; flex-direction:column;
+        }
+
+        .topbar {
+            display:flex; align-items:center; justify-content:space-between;
+            padding:14px 28px;
+            background:rgba(6,18,36,0.95);
+            border-bottom:1px solid rgba(102,252,241,0.25);
+            flex-shrink:0;
+        }
+        .topbar-left { display:flex; align-items:center; gap:14px; }
+        .back-btn {
+            background:linear-gradient(135deg,#66fcf1,#45a29e);
+            border:none; border-radius:25px; padding:10px 22px; color:#000;
+            font-family:'Rajdhani',sans-serif; font-weight:700;
+            font-size:0.9em; cursor:pointer; letter-spacing:1px;
+            text-transform:uppercase; transition:all 0.3s;
+        }
+        .back-btn:hover { transform:scale(1.05); box-shadow:0 0 20px rgba(102,252,241,0.4); }
+        .planet-title {
+            font-family:'Orbitron',monospace; font-size:1.6em;
+            color:var(--accent); text-shadow:0 0 15px rgba(102,252,241,0.3);
+        }
+
+        /* Main: planet centered */
+        .inspect-body {
+            flex:1; display:flex; align-items:center; justify-content:center;
+            position:relative; overflow:hidden;
+        }
+        #inspectCanvas {
+            filter:drop-shadow(0 0 60px rgba(102,252,241,0.2));
+        }
+
+        /* Info overlay on sides */
+        .info-left {
+            position:absolute; left:30px; top:50%; transform:translateY(-50%);
+            display:flex; flex-direction:column; gap:16px; width:240px;
+        }
+        .info-card {
+            background:rgba(6,18,36,0.85);
+            border:1px solid rgba(102,252,241,0.25);
+            border-radius:14px; padding:16px;
+            backdrop-filter:blur(10px);
+            transition:all 0.3s;
+        }
+        .info-card:hover { border-color:rgba(102,252,241,0.5); transform:translateX(4px); }
+        .info-card-title {
+            font-family:'Orbitron',monospace; font-size:0.75em;
+            color:var(--accent); letter-spacing:2px; text-transform:uppercase;
+            margin-bottom:8px;
+        }
+        .info-card-body { font-size:0.9em; color:rgba(255,255,255,0.75); line-height:1.5; }
+
+        .info-right {
+            position:absolute; right:30px; top:50%; transform:translateY(-50%);
+            display:flex; flex-direction:column; gap:16px; width:240px;
+        }
+
+        /* Mission panel (only for Moon/Mars) */
+        .mission-panel {
+            background:rgba(6,18,36,0.85);
+            border:1px solid rgba(102,252,241,0.25);
+            border-radius:14px; padding:16px;
+            backdrop-filter:blur(10px);
+        }
+        .stat-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+            font-size:0.9em;
+        }
+        .stat-row:last-child { border-bottom:none; }
+        .stat-label { color:rgba(255,255,255,0.6); display:flex; align-items:center; gap:6px; }
+        .stat-val { font-family:'Orbitron',monospace; font-size:0.85em; color:var(--accent); }
+
+        /* Bottom buttons */
+        .bottom-bar {
+            padding:16px 28px;
+            background:rgba(6,18,36,0.98);
+            border-top:1px solid rgba(102,252,241,0.2);
+            display:flex; justify-content:center; gap:20px; flex-shrink:0;
+        }
+        .explore-btn {
+            display:flex; align-items:center; gap:12px;
+            padding:14px 35px;
+            background:linear-gradient(135deg,#7b2ff7,#66fcf1);
+            border:none; border-radius:35px; color:#000;
+            font-family:'Rajdhani',sans-serif; font-weight:700;
+            font-size:1.05em; cursor:pointer; letter-spacing:2px;
+            text-transform:uppercase; transition:all 0.3s;
+            box-shadow:0 8px 30px rgba(123,47,247,0.4);
+        }
+        .explore-btn:hover { transform:translateY(-3px) scale(1.04); box-shadow:0 12px 40px rgba(123,47,247,0.6); }
+        .explore-btn.hidden { display:none; }
+
+        /* Colonization mini bar */
+        .colony-mini-bar { height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-top:8px; }
+        .colony-mini-fill { height:100%; background:linear-gradient(90deg,#7b2ff7,#66fcf1); border-radius:3px; transition:width 0.5s; }
+
+        /* Stars */
+        .stars-canvas { position:fixed; inset:0; z-index:-1; pointer-events:none; }
+    </style>
+</head>
+<body>
+    <canvas class="stars-canvas" id="starsBg"></canvas>
+
+    <div class="topbar">
+        <div class="topbar-left">
+            <button class="back-btn" onclick="goBack()">← Back</button>
+            <div class="planet-title" id="pageTitle">Inspecting Planet</div>
+        </div>
+        <div style="font-family:'Orbitron',monospace;font-size:0.8em;color:rgba(255,255,255,0.4)">
+            🔭 PLANET INSPECTOR
+        </div>
+    </div>
+
+    <div class="inspect-body">
+        <canvas id="inspectCanvas" width="500" height="500"></canvas>
+
+        <!-- LEFT INFO -->
+        <div class="info-left">
+            <div class="info-card">
+                <div class="info-card-title">📍 Distance from Sun</div>
+                <div class="info-card-body" id="infoDistance">—</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🌙 Moons</div>
+                <div class="info-card-body" id="infoMoons">—</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">📖 About</div>
+                <div class="info-card-body" id="infoDesc">—</div>
+            </div>
+        </div>
+
+        <!-- RIGHT INFO: missions if colonizable -->
+        <div class="info-right">
+            <div class="mission-panel" id="missionPanel" style="display:none">
+                <div class="info-card-title">🚀 Your Missions</div>
+                <div class="stat-row"><div class="stat-label">🛰️ Satellites</div><div class="stat-val" id="mSat">0</div></div>
+                <div class="stat-row"><div class="stat-label">🚗 Rovers</div><div class="stat-val" id="mRov">0</div></div>
+                <div class="stat-row"><div class="stat-label">🛬 Landers</div><div class="stat-val" id="mLan">0</div></div>
+                <div style="margin-top:12px">
+                    <div style="display:flex;justify-content:space-between;font-size:0.8em;color:rgba(255,255,255,0.5);margin-bottom:4px">
+                        <span>Colonization</span><span id="mColony">0%</span>
+                    </div>
+                    <div class="colony-mini-bar"><div class="colony-mini-fill" id="mColonyFill" style="width:0%"></div></div>
+                </div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🌡️ Temperature</div>
+                <div class="info-card-body" id="infoTemp">—</div>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">🌀 Orbital Speed</div>
+                <div class="info-card-body" id="infoSpeed">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-bar">
+        <button class="explore-btn hidden" id="exploreBtn" onclick="goToExplore()">
+            🌍 Open Exploration Base
+        </button>
+    </div>
+
+    <script src="js/resource-state.js"></script>
+    <script>
+        // Planet data
+        const PLANET_DATA = {
+            Mercury: { color:'#8C7853', color2:'#5a4a35', radius:80, rings:false, temp:'-173°C to 427°C', speed:'47.4 km/s', desc:'Closest planet to the Sun with extreme temperature swings. No atmosphere, heavily cratered surface.', dist:'58M km', moons:'None', colonizable:false },
+            Venus:   { color:'#FFC649', color2:'#d4941a', radius:110, rings:false, temp:'462°C (avg)', speed:'35 km/s', desc:'Hottest planet due to a thick CO₂ atmosphere creating a runaway greenhouse effect. Covered in volcanic plains.', dist:'108M km', moons:'None', colonizable:false },
+            Earth:   { color:'#6B93D6', color2:'#3a5fa8', radius:120, rings:false, temp:'-88°C to 58°C', speed:'29.8 km/s', desc:'Our home. The only known planet harboring life, with liquid water oceans and a protective magnetosphere.', dist:'150M km', moons:'The Moon', colonizable:false },
+            Mars:    { color:'#CD5C5C', color2:'#7a2020', radius:100, rings:false, temp:'-143°C to 35°C', speed:'24.1 km/s', desc:'The Red Planet, target for human colonization. Has the tallest volcano (Olympus Mons) and deepest canyon (Valles Marineris) in the solar system.', dist:'225M km', moons:'Phobos & Deimos', colonizable:true, explorePage:'planet-mars.html' },
+            Jupiter: { color:'#D8CA9D', color2:'#b5a060', radius:200, rings:false, temp:'-110°C (cloud top)', speed:'13.1 km/s', desc:'Largest planet, a gas giant with the iconic Great Red Spot storm that has raged for centuries. Has 95 known moons.', dist:'778M km', moons:'Io, Europa, Ganymede, Callisto (+75 more)', colonizable:false },
+            Saturn:  { color:'#FAD5A5', color2:'#d4a060', radius:180, rings:true, temp:'-178°C (cloud top)', speed:'9.7 km/s', desc:'Famous for its spectacular ring system of ice and rock. Less dense than water — it would float in a giant ocean.', dist:'1.4B km', moons:'Titan, Enceladus (+80 more)', colonizable:false },
+            Uranus:  { color:'#4FD0E7', color2:'#20a0b8', radius:150, rings:true, temp:'-224°C', speed:'6.8 km/s', desc:'An ice giant tilted 98° — it essentially orbits the Sun on its side. Has faint rings and a methane atmosphere giving its blue-green color.', dist:'2.9B km', moons:'Miranda, Ariel, Umbriel, Titania, Oberon (+22)', colonizable:false },
+            Neptune: { color:'#4B70DD', color2:'#2040a0', radius:150, rings:false, temp:'-214°C', speed:'5.4 km/s', desc:'The windiest planet with storms exceeding 2,100 km/h. The farthest known planet from the Sun.', dist:'4.5B km', moons:'Triton (orbits retrograde), Nereid (+12)', colonizable:false },
+            Moon:    { color:'#C8C8C8', color2:'#808080', radius:100, rings:false, temp:'-233°C to 123°C', speed:'1.02 km/s (orbital)', desc:"Earth's only natural satellite. Heavily cratered, tidally locked, and a prime target for humanity's first off-world colony.", dist:'384K km from Earth', moons:'N/A (is a moon)', colonizable:true, explorePage:'planet-moon.html' }
+        };
+
+        const params = new URLSearchParams(location.search);
+        const planetName = params.get('planet') || 'Mars';
+        const data = PLANET_DATA[planetName] || PLANET_DATA['Mars'];
+
+        let angle = 0;
+
+        window.onload = function() {
+            const company = sessionStorage.getItem('companyName');
+            if (!company) { window.location.href = 'index.html'; return; }
+
+            ResourceState.load();
+            document.getElementById('pageTitle').textContent = `🔭 ${planetName}`;
+            document.getElementById('infoDistance').textContent = data.dist;
+            document.getElementById('infoMoons').textContent = data.moons;
+            document.getElementById('infoDesc').textContent = data.desc;
+            document.getElementById('infoTemp').textContent = data.temp;
+            document.getElementById('infoSpeed').textContent = data.speed;
+
+            // Show mission panel and explore button for colonizable planets
+            if (data.colonizable && (planetName === 'Moon' || planetName === 'Mars')) {
+                document.getElementById('missionPanel').style.display = 'block';
+                document.getElementById('exploreBtn').classList.remove('hidden');
+                updateMissionPanel();
+            }
+
+            initStars();
+            animatePlanet();
+            setInterval(() => { if (data.colonizable) updateMissionPanel(); }, 2000);
+        };
+
+        function goBack() { history.back(); }
+        function goToExplore() { window.location.href = data.explorePage; }
+
+        function updateMissionPanel() {
+            const m = ResourceState.missions[planetName];
+            if (!m) return;
+            document.getElementById('mSat').textContent = m.satellites;
+            document.getElementById('mRov').textContent = m.rovers;
+            document.getElementById('mLan').textContent = m.landers;
+            const pct = ResourceState.getColonizationPercent(planetName);
+            document.getElementById('mColony').textContent = pct + '%';
+            document.getElementById('mColonyFill').style.width = pct + '%';
+        }
+
+        // ── PLANET ANIMATION ──
+        const canvas = document.getElementById('inspectCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function animatePlanet() {
+            ctx.clearRect(0, 0, 500, 500);
+            drawInspectPlanet();
+            angle += 0.004;
+            requestAnimationFrame(animatePlanet);
+        }
+
+        function lighten(hex, amt) {
+            let n = parseInt(hex.replace('#',''),16);
+            const r = Math.min(255,(n>>16)+amt), g = Math.min(255,(n>>8&0xFF)+amt), b = Math.min(255,(n&0xFF)+amt);
+            return '#'+(0x1000000+(r)*0x10000+(g)*0x100+b).toString(16).slice(1);
+        }
+
+        function drawInspectPlanet() {
+            const cx = 250, cy = 250, r = data.radius;
+            const time = Date.now() * 0.001;
+            const m = (data.colonizable && ResourceState.missions[planetName]) ? ResourceState.missions[planetName] : null;
+
+            // Atmospheric glow
+            const atmGlow = ctx.createRadialGradient(cx, cy, r, cx, cy, r*1.6);
+            atmGlow.addColorStop(0, hexToRgba(data.color, 0.15));
+            atmGlow.addColorStop(1, hexToRgba(data.color, 0));
+            ctx.fillStyle = atmGlow;
+            ctx.beginPath(); ctx.arc(cx, cy, r*1.6, 0, Math.PI*2); ctx.fill();
+
+            // Planet body
+            const grad = ctx.createRadialGradient(cx-r*0.35, cy-r*0.35, 0, cx, cy, r);
+            grad.addColorStop(0, lighten(data.color, 40));
+            grad.addColorStop(0.6, data.color);
+            grad.addColorStop(1, data.color2);
+            ctx.fillStyle = grad;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
+
+            // Saturn rings (before planet features)
+            if (data.rings && planetName === 'Saturn') {
+                for (let i = 0; i < 4; i++) {
+                    ctx.strokeStyle = `rgba(255,200,150,${0.4 - i*0.08})`;
+                    ctx.lineWidth = 6 - i;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, r*(1.6+i*0.15), r*(0.2+i*0.04), 0, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+            }
+            if (data.rings && planetName === 'Uranus') {
+                for (let i = 0; i < 3; i++) {
+                    ctx.strokeStyle = `rgba(79,208,231,${0.3 - i*0.08})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, r*(1.5+i*0.12), r*(0.12+i*0.03), Math.PI/3, 0, Math.PI*2);
+                    ctx.stroke();
+                }
+            }
+
+            // Planet features (clip to circle)
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+
+            ctx.translate(cx, cy);
+            ctx.rotate(angle);
+            ctx.translate(-cx, -cy);
+
+            switch (planetName) {
+                case 'Earth':
+                    // Continents
+                    const contArr = [{x:-50,y:-30,r:30},{x:20,y:20,r:25},{x:-30,y:40,r:20},{x:60,y:-20,r:15},{x:0,y:-60,r:18},{x:-70,y:0,r:12}];
+                    contArr.forEach(c => { ctx.fillStyle='rgba(34,139,34,0.8)'; ctx.beginPath(); ctx.arc(cx+c.x,cy+c.y,c.r,0,Math.PI*2); ctx.fill(); });
+                    // Clouds
+                    for(let i=0;i<5;i++) { const ca=(i/5)*Math.PI*2+time*0.1; ctx.fillStyle='rgba(255,255,255,0.35)'; ctx.beginPath(); ctx.arc(cx+Math.cos(ca)*r*0.5,cy+Math.sin(ca)*r*0.5,r*0.12,0,Math.PI*2); ctx.fill(); }
+                    break;
+                case 'Mars':
+                    const marsR=[{x:-50,y:-30,rx:40,ry:25},{x:60,y:40,rx:35,ry:20},{x:-20,y:70,rx:30,ry:18}];
+                    marsR.forEach(reg=>{ctx.fillStyle='rgba(100,30,10,0.4)';ctx.beginPath();ctx.ellipse(cx+reg.x,cy+reg.y,reg.rx,reg.ry,0,0,Math.PI*2);ctx.fill();});
+                    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.arc(cx,cy-r*0.85,r*0.18,0,Math.PI*2); ctx.fill();
+                    ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(cx,cy+r*0.85,r*0.14,0,Math.PI*2); ctx.fill();
+                    break;
+                case 'Jupiter':
+                    for(let i=-4;i<=4;i++){ctx.fillStyle=`rgba(${180+i*10},${100+i*5},30,0.4)`;ctx.fillRect(cx-r,cy+i*r*0.2,r*2,r*0.18);}
+                    ctx.fillStyle='rgba(180,60,40,0.7)';ctx.beginPath();ctx.ellipse(cx+r*0.3,cy,r*0.35,r*0.22,0,0,Math.PI*2);ctx.fill();
+                    break;
+                case 'Saturn':
+                    for(let i=-3;i<=3;i++){ctx.fillStyle=`rgba(220,180,100,0.3)`;ctx.fillRect(cx-r,cy+i*r*0.22,r*2,r*0.2);}
+                    break;
+                case 'Mercury':
+                    const mercC=[{x:-40,y:-30,r:15},{x:30,y:40,r:20},{x:-20,y:50,r:12},{x:60,y:-20,r:10},{x:-60,y:20,r:8}];
+                    mercC.forEach(c=>{ctx.fillStyle='rgba(80,70,60,0.6)';ctx.beginPath();ctx.arc(cx+c.x,cy+c.y,c.r,0,Math.PI*2);ctx.fill();});
+                    break;
+                case 'Uranus':
+                case 'Neptune':
+                    for(let i=0;i<3;i++){const la=(i/3)*Math.PI*2+time*0.05;ctx.fillStyle='rgba(255,255,255,0.1)';ctx.beginPath();ctx.arc(cx+Math.cos(la)*r*0.4,cy+Math.sin(la)*r*0.4,r*0.3,0,Math.PI*2);ctx.fill();}
+                    break;
+                case 'Moon':
+                    const moonC=[{x:-60,y:-40,r:18},{x:50,y:60,r:22},{x:20,y:-70,r:14},{x:-40,y:70,r:16},{x:80,y:-30,r:12},{x:-80,y:20,r:10}];
+                    moonC.forEach(c=>{ctx.fillStyle='rgba(100,100,100,0.55)';ctx.beginPath();ctx.arc(cx+c.x,cy+c.y,c.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(60,60,60,0.3)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx+c.x,cy+c.y,c.r,0,Math.PI*2);ctx.stroke();});
+                    break;
+                case 'Venus':
+                    for(let i=0;i<4;i++){const va=(i/4)*Math.PI*2;ctx.fillStyle='rgba(255,180,50,0.2)';ctx.beginPath();ctx.arc(cx+Math.cos(va)*r*0.5,cy+Math.sin(va)*r*0.5,r*0.25,0,Math.PI*2);ctx.fill();}
+                    break;
+            }
+
+            ctx.restore();
+
+            // Highlight
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.clip();
+            const hl = ctx.createRadialGradient(cx-r*0.45, cy-r*0.45, 0, cx, cy, r);
+            hl.addColorStop(0, 'rgba(255,255,255,0.22)');
+            hl.addColorStop(0.5, 'rgba(255,255,255,0.04)');
+            hl.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = hl;
+            ctx.fillRect(cx-r, cy-r, r*2, r*2);
+            ctx.restore();
+
+            // Orbiting satellites (if colonizable)
+            if (m) {
+                for (let i = 0; i < m.satellites; i++) {
+                    const orbitR = r + 25 + i * 18;
+                    const satAngle = time * (0.8 + i * 0.2) + (i * Math.PI * 2 / Math.max(m.satellites, 1));
+                    const sx = cx + Math.cos(satAngle) * orbitR;
+                    const sy = cy + Math.sin(satAngle) * orbitR * 0.38;
+
+                    ctx.strokeStyle = hexToRgba(data.color, 0.18);
+                    ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.ellipse(cx, cy, orbitR, orbitR*0.38, 0, 0, Math.PI*2); ctx.stroke();
+
+                    ctx.fillStyle = '#66fcf1';
+                    ctx.beginPath(); ctx.arc(sx, sy, 5, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = '#45a29e';
+                    ctx.fillRect(sx-10, sy-2, 7, 4); ctx.fillRect(sx+3, sy-2, 7, 4);
+                }
+            }
+        }
+
+        function hexToRgba(hex, alpha) {
+            const n = parseInt(hex.replace('#',''),16);
+            return `rgba(${n>>16},${(n>>8)&0xFF},${n&0xFF},${alpha})`;
+        }
+
+        function initStars() {
+            const c = document.getElementById('starsBg');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const sCtx = c.getContext('2d');
+            const stars = Array.from({length:250}, () => ({x:Math.random()*c.width, y:Math.random()*c.height, r:Math.random()*1.5+0.2, t:Math.random()*Math.PI*2}));
+            function draw() {
+                sCtx.clearRect(0,0,c.width,c.height);
+                const t = Date.now()*0.001;
+                stars.forEach(s => {
+                    const alpha = 0.25 + Math.sin(t+s.t)*0.4;
+                    sCtx.fillStyle = `rgba(255,255,255,${Math.max(0,alpha)})`;
+                    sCtx.beginPath(); sCtx.arc(s.x,s.y,s.r,0,Math.PI*2); sCtx.fill();
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>

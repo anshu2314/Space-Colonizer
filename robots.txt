@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://anshu2314.github.io/Space-Colonizer/sitemap.xml

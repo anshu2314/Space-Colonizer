@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Colonizer - Mission Control</title>
+    <title>Space Colonizer — Celestial Mission Control</title>
+    <meta name="description" content="Manage spacecraft fleet, monitor live lunar sifting and extraction parameters, and launch interplanetary rockets from space flight command center.">
+    <meta name="keywords" content="moon spaceflight center, space dashboard browser game, orbit capture, rocket simulation">
     <style>
         body {
             margin: 0;
@@ -614,7 +616,7 @@
                     <div class="vehicle-inv-label">In Inventory</div>
                     <h4 class="vehicle-title">🛰️ Satellites</h4>
                     <div class="cost-table">
-                        <div class="cost-row">Iron: 20 · Wood: 20</div>
+                        <div class="cost-row">Iron: 20 · Titanium: 20</div>
                         <div class="cost-row">Metal: 15</div>
                     </div>
                     <button onclick="buyVehicle('satellite')" class="shop-button">Purchase Satellite</button>
@@ -624,7 +626,7 @@
                     <div class="vehicle-inv-label">In Inventory</div>
                     <h4 class="vehicle-title">🚗 Rovers</h4>
                     <div class="cost-table">
-                        <div class="cost-row">Iron: 30 · Wood: 25</div>
+                        <div class="cost-row">Iron: 30 · Titanium: 25</div>
                         <div class="cost-row">Metal: 20</div>
                     </div>
                     <button onclick="buyVehicle('rover')" class="shop-button">Purchase Rover</button>
@@ -634,7 +636,7 @@
                     <div class="vehicle-inv-label">In Inventory</div>
                     <h4 class="vehicle-title">🛬 Landers</h4>
                     <div class="cost-table">
-                        <div class="cost-row">Iron: 40 · Wood: 30</div>
+                        <div class="cost-row">Iron: 40 · Titanium: 30</div>
                         <div class="cost-row">Metal: 25</div>
                     </div>
                     <button onclick="buyVehicle('lander')" class="shop-button">Purchase Lander</button>
@@ -675,9 +677,9 @@
                         <div class="resource-glow iron-glow"></div>
                     </div>
                     <div class="resource-card wood-card">
-                        <div class="resource-icon">🌲</div>
+                        <div class="resource-icon">💎</div>
                         <div class="resource-info">
-                            <div class="resource-name">Wood</div>
+                            <div class="resource-name">Titanium</div>
                             <div class="resource-count" id="woodCount">?</div>
                         </div>
                         <div class="resource-glow wood-glow"></div>
@@ -693,14 +695,16 @@
                 </div>
             </div>
             
-            <div class="action-buttons">
-                <button onclick="gatherResources()" class="gather-btn">
-                    <span class="btn-icon">⛏️</span>
-                    Gather Resources
-                </button>
-                <button onclick="window.location.href='test-resources.html'" class="tools-btn">
-                    <span class="btn-icon">🔧</span>
-                    Resource Tools
+            <div class="action-buttons" style="flex-direction: column; align-items: center; gap: 8px; margin-top: 20px;">
+                <div style="font-size: 0.9em; color: #66fcf1; font-weight: bold; text-align: center; border: 1px solid rgba(102,252,241,0.3); padding: 12px 20px; border-radius: 15px; background: rgba(102,252,241,0.05); width: 100%; margin-bottom: 15px;">
+                    🛰️ Lunar Resource Operations Active: <br>
+                    <span style="font-size: 0.85em; color: #fff; font-weight: normal;">
+                        Drive the Rover on the Moon to drill deposits (Titanium, Water, Metal). Deployed Landers automatically produce Fuel passively (+2 fuel/sec per lander) and automatically extract other resources if Lander Upgrades are developed!
+                    </span>
+                </div>
+                <button onclick="window.location.href='resources.html'" class="tools-btn" style="width: 100%; justify-content: center;">
+                    <span class="btn-icon">⚙️</span>
+                    Lander Upgrades Lab
                 </button>
             </div>
         </div>
@@ -932,9 +936,8 @@
             showNotification('✅ Gathered +15 Fuel, +10 Iron, Wood, Metal, Water!');
         }
 
-        // UPDATE TOOL COSTS - Updates tool button texts
         function updateToolCosts() {
-            const toolNames = { wood: 'Woodcutter', water: 'Water Absorber', metal: 'Metal Extractor' };
+            const toolNames = { wood: 'Lander Titanium Sifter', water: 'Lander Water Condenser', metal: 'Lander Metal Refiner' };
             
             Object.entries(ResourceState.tools).forEach(([toolType, tool]) => {
                 const buttonId = `buy${toolNames[toolType].replace(' ', '')}`;

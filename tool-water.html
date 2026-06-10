@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💧 Water Absorber - Space Colonizer</title>
+    <title>💧 Lander Water Condenser - Space Colonizer</title>
     <style>
         body {
             margin: 0;
@@ -362,17 +362,17 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <button class="back-btn" onclick="goBackToResources()">← Back to Resources</button>
+            <button class="back-btn" onclick="goBackToResources()">← Back to Lander Upgrades</button>
             <div class="tool-title">
                 <div class="tool-icon">💧</div>
-                <h1 class="tool-name">Water Absorber</h1>
+                <h1 class="tool-name">Lander Water Condenser</h1>
             </div>
         </div>
 
         <div class="tool-description">
             <p class="description-text">
-                The Water Absorber is an advanced extraction and purification system that continuously harvests water from atmospheric moisture and underground sources. 
-                Critical for life support systems and various industrial processes, this tool becomes more efficient with each upgrade.
+                The Lander Water Condenser extracts water ice from deep lunar craters and purifies it.
+                Critical for life support, hydrogen-oxygen fuel cells, and refining, its extraction speed increases with each upgrade level and active deployed Moon Landers.
             </p>
         </div>
 
@@ -387,7 +387,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalGenerated">0</div>
-                <div class="stat-label">Total Generated</div>
+                <div class="stat-label">Total Condensed</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="efficiency">0%</div>
@@ -397,7 +397,7 @@
 
         <div class="upgrade-section">
             <div class="upgrade-header">
-                <h2>🔧 Tool Upgrade</h2>
+                <h2>🔧 Subsystem Upgrade</h2>
             </div>
             
             <div class="upgrade-preview">
@@ -422,7 +422,7 @@
             </div>
 
             <button class="upgrade-btn" id="upgradeBtn" onclick="upgradeTool()">
-                🔧 Upgrade Water Absorber
+                🔧 Upgrade Water Condenser
             </button>
         </div>
 
@@ -436,9 +436,9 @@
                     <div class="resource-name">Water</div>
                 </div>
                 <div class="resource-item">
-                    <div class="resource-icon">🌲</div>
+                    <div class="resource-icon">💎</div>
                     <div class="resource-count" id="woodCount">0</div>
-                    <div class="resource-name">Wood</div>
+                    <div class="resource-name">Titanium</div>
                 </div>
                 <div class="resource-item">
                     <div class="resource-icon">🔩</div>
@@ -470,14 +470,15 @@
                 updateGenerationIndicator();
             }, 1000);
             
-            console.log('💧 Water Absorber tool page loaded!');
+            console.log('💧 Lander Water Condenser page loaded!');
         }
 
         // Generate resources from tools
         function generateResources() {
             const waterTool = ResourceState.tools.water;
-            if (waterTool.level > 0) {
-                const generation = waterTool.level * 2;
+            const activeLanders = ResourceState.missions.Moon?.landers || 0;
+            if (waterTool.level > 0 && activeLanders > 0) {
+                const generation = waterTool.level * activeLanders;
                 const oldAmount = ResourceState.resources.water;
                 ResourceState.resources.water += generation;
                 totalWaterGenerated += generation;
@@ -532,7 +533,7 @@
             const costContainer = document.getElementById('costBreakdown');
             costContainer.innerHTML = '';
 
-            const costIcons = { wood: '🌲', water: '💧', metal: '🔩' };
+            const costIcons = { wood: '💎', water: '💧', metal: '🔩' };
             
             Object.entries(preview.costs).forEach(([resource, cost]) => {
                 const hasEnough = ResourceState.resources[resource] >= cost;
@@ -542,7 +543,7 @@
                 costItem.innerHTML = `
                     <div class="cost-icon">${costIcons[resource] || '❓'}</div>
                     <div class="cost-amount">${cost}</div>
-                    <div class="cost-label">${resource.toUpperCase()}</div>
+                    <div class="cost-label">${resource === 'wood' ? 'TITANIUM' : resource.toUpperCase()}</div>
                     <div class="cost-label">Have: ${ResourceState.resources[resource]}</div>
                 `;
                 
@@ -570,7 +571,8 @@
 
         // Update generation indicator
         function updateGenerationIndicator() {
-            const generationRate = ResourceState.tools.water.level * 2;
+            const activeLanders = ResourceState.missions.Moon?.landers || 0;
+            const generationRate = ResourceState.tools.water.level * activeLanders;
             document.getElementById('waterGenIndicator').textContent = `+${generationRate}/sec`;
         }
 

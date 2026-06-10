@@ -624,9 +624,11 @@
     let minerals = [
         { x: 700, y: 600, r: 35, type: 'Helium-3', amount: 80, scanned: false },
         { x: 2200, y: 900, r: 35, type: 'Titanium Vein', amount: 150, scanned: false },
-        { x: 1100, y: 2000, r: 40, type: 'Helium-3', amount: 100, scanned: false },
-        { x: 1800, y: 2300, r: 35, type: 'Helium-3', amount: 90, scanned: false },
-        { x: 900, y: 2500, r: 35, type: 'Titanium Vein', amount: 120, scanned: false }
+        { x: 1100, y: 2000, r: 40, type: 'Water Ice', amount: 100, scanned: false },
+        { x: 1800, y: 2300, r: 35, type: 'Lunar Metal', amount: 90, scanned: false },
+        { x: 900, y: 2500, r: 35, type: 'Titanium Vein', amount: 120, scanned: false },
+        { x: 2700, y: 1500, r: 35, type: 'Water Ice', amount: 110, scanned: false },
+        { x: 1500, y: 2700, r: 35, type: 'Lunar Metal', amount: 130, scanned: false }
     ];
 
     let landingPads = [
@@ -971,7 +973,11 @@
     };
 
     function goBack() {
-        broadcastOffline();
+        try {
+            broadcastOffline();
+        } catch (e) {
+            console.error('MQTT broadcast offline failed:', e);
+        }
         window.location.href = 'planet-moon.html';
     }
 
@@ -1404,9 +1410,16 @@
                     if (activeAction.node.type === 'Helium-3') {
                         ResourceState.resources.fuel = (ResourceState.resources.fuel || 0) + val;
                         showNotif(`Survey Completed! Mined +${val} Helium-3 (Fuel)`);
-                    } else {
+                    } else if (activeAction.node.type === 'Water Ice') {
+                        ResourceState.resources.water = (ResourceState.resources.water || 0) + val;
+                        showNotif(`Survey Completed! Mined +${val} Water Ice`);
+                    } else if (activeAction.node.type === 'Lunar Metal') {
+                        ResourceState.resources.metal = (ResourceState.resources.metal || 0) + val;
                         ResourceState.resources.iron = (ResourceState.resources.iron || 0) + val;
-                        showNotif(`Survey Completed! Mined +${val} Titanium (Iron)`);
+                        showNotif(`Survey Completed! Mined +${val} Lunar Metal (Iron & Metal)`);
+                    } else if (activeAction.node.type === 'Titanium Vein') {
+                        ResourceState.resources.wood = (ResourceState.resources.wood || 0) + val;
+                        showNotif(`Survey Completed! Mined +${val} Titanium`);
                     }
                     ResourceState.save();
                     
@@ -1660,22 +1673,36 @@
             if (node.scanned) return;
             const screenNX = node.x - camX, screenNY = node.y - camY;
             const glowT = 1.2 + Math.sin(performance.now() * 0.005) * 0.25;
+            
+            let nodeColor = '#66fcf1';
+            let pulseColor = 'rgba(102, 252, 241, 0.08)';
+            if (node.type === 'Titanium Vein') {
+                nodeColor = '#e2e8f0';
+                pulseColor = 'rgba(226, 232, 240, 0.08)';
+            } else if (node.type === 'Water Ice') {
+                nodeColor = '#38bdf8';
+                pulseColor = 'rgba(56, 189, 248, 0.08)';
+            } else if (node.type === 'Lunar Metal') {
+                nodeColor = '#fbbf24';
+                pulseColor = 'rgba(251, 191, 36, 0.08)';
+            }
+            
             const glowGrad = mainCtx.createRadialGradient(screenNX, screenNY, 0, screenNX, screenNY, node.r * glowT);
-            glowGrad.addColorStop(0, 'rgba(102, 252, 241, 0.08)');
-            glowGrad.addColorStop(1, 'rgba(102, 252, 241, 0)');
+            glowGrad.addColorStop(0, pulseColor);
+            glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             mainCtx.fillStyle = glowGrad;
             mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, node.r * glowT, 0, Math.PI * 2); mainCtx.fill();
 
-            mainCtx.fillStyle = 'rgba(102, 252, 241, 0.55)';
+            mainCtx.fillStyle = nodeColor;
             mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, 6, 0, Math.PI * 2); mainCtx.fill();
-            mainCtx.strokeStyle = '#66fcf1';
+            mainCtx.strokeStyle = nodeColor;
             mainCtx.lineWidth = 1;
             mainCtx.beginPath(); mainCtx.arc(screenNX, screenNY, 12 + Math.sin(performance.now() * 0.007)*3, 0, Math.PI * 2); mainCtx.stroke();
             
-            mainCtx.fillStyle = '#66fcf1';
+            mainCtx.fillStyle = nodeColor;
             mainCtx.font = 'bold 9px "Orbitron", monospace';
             mainCtx.textAlign = 'center';
-            mainCtx.fillText('SURVEY POINT: ' + node.type.toUpperCase(), screenNX, screenNY - 18);
+            mainCtx.fillText(node.type.toUpperCase(), screenNX, screenNY - 18);
         });
 
         // 4. Draw flags planted & shadows
@@ -2149,7 +2176,11 @@
         // Draw mineral node points
         minerals.forEach(node => {
             if (node.scanned) return;
-            mapCtx.fillStyle = '#66fcf1';
+            let nodeColor = '#66fcf1';
+            if (node.type === 'Titanium Vein') nodeColor = '#e2e8f0';
+            else if (node.type === 'Water Ice') nodeColor = '#38bdf8';
+            else if (node.type === 'Lunar Metal') nodeColor = '#fbbf24';
+            mapCtx.fillStyle = nodeColor;
             mapCtx.beginPath(); mapCtx.arc(node.x * scale, node.y * scale, 2.5, 0, Math.PI * 2); mapCtx.fill();
         });
 
@@ -2256,10 +2287,14 @@
         minerals.forEach(node => {
             if (node.scanned) return;
             const snX = toScreenX(node.x), snY = toScreenY(node.y);
-            largeMapCtx.fillStyle = '#66fcf1';
+            let nodeColor = '#66fcf1';
+            if (node.type === 'Titanium Vein') nodeColor = '#e2e8f0';
+            else if (node.type === 'Water Ice') nodeColor = '#38bdf8';
+            else if (node.type === 'Lunar Metal') nodeColor = '#fbbf24';
+            largeMapCtx.fillStyle = nodeColor;
             largeMapCtx.beginPath(); largeMapCtx.arc(snX, snY, 4, 0, Math.PI * 2); largeMapCtx.fill();
             
-            largeMapCtx.fillStyle = 'rgba(102, 252, 241, 0.6)';
+            largeMapCtx.fillStyle = nodeColor;
             largeMapCtx.font = '7px "Orbitron", monospace';
             largeMapCtx.fillText(node.type, snX, snY - 8);
         });

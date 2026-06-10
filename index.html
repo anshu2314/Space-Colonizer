@@ -3,7 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Colonizer</title>
+    <title>Space Colonizer — Play the Ultimate Space Fantasy Exploration Game</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Embark on space exploration missions in Space Colonizer. Pilot lunar landers in powered descent, mine titanium &amp; water with your moon rover, and colonize the solar system in this free browser game.">
+    <meta name="keywords" content="space fantasy game, moon landing simulator, lunar lander descent, moon rover sandbox, mine titanium, play space colonizer, free space browser game">
+    <link rel="canonical" href="https://anshu2314.github.io/Space-Colonizer/" />
+    
+    <!-- Open Graph (Social Sharing) -->
+    <meta property="og:title" content="Space Colonizer — Play the Ultimate Space Fantasy Exploration Game">
+    <meta property="og:description" content="Land on the Moon, explore craters in your rover, mine titanium, and establish planetary colonies directly in your browser.">
+    <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/As08-16-2593.jpg/1024px-As08-16-2593.jpg">
+    <meta property="og:url" content="https://anshu2314.github.io/Space-Colonizer/">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Space Colonizer",
+      "genre": "Space Fantasy, Lunar Lander Simulation, Rover Sandbox",
+      "playMode": "SinglePlayer",
+      "applicationCategory": "Game",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
     <style>
         body {
             margin: 0;
@@ -150,9 +181,27 @@
         .commander-input::before {
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NASA_astronaut_icon.svg/1024px-NASA_astronaut_icon.svg.png');
         }
+
+        /* Screen reader hidden style for accessibility & SEO keywords */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
     </style>
 </head>
 <body>
+    <!-- Accessibility and Search Engine Optimization Keywords block -->
+    <div class="sr-only">
+        <h2>Space Fantasy Spaceflight &amp; Regolith Mining Simulator</h2>
+        <p>Pilot advanced spacecraft like satellites, rovers, and lunar landers. Launch orbit circularization burns, descent ignition procedures, and navigate Moon physics safely. Gather space fantasy ores like Lunar Metal, pure Titanium, and Water Ice to colonize the cosmos.</p>
+    </div>
+
     <div class="stars">
         <video autoplay muted loop playsinline>
             <source src="./192935-893872011_medium.mp4" type="video/mp4">

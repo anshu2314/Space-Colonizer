@@ -173,6 +173,53 @@ function startMission(planet) {
     missionRafId = requestAnimationFrame(missionLoop);
 }
 
+function startMissionFromOrbit(planet) {
+    missionPlanet = planet;
+    missionPhase = 5;
+    missionActive = true;
+
+    // reset
+    Object.assign(MS, {
+        ignitionProgress: 0, engineRunning: false,
+        rocketX: 0, rocketY: 0, altitude: 400, speed: 7.8, fuel: 100,
+        camY: 0, skyBlend: 1.0,
+        sepSubPhase: 0, sep1Y: 0, sep1Rot: 0, sep2Y: 0, sep2Rot: 0, sepTimer: 0,
+        orbitAngle: Math.random() * Math.PI * 2,
+        capX: window.innerWidth * 0.14, capY: window.innerHeight * 0.5,
+        capVX: 2.2, capVY: -0.3, capAngle: -0.3,
+        moonTX: window.innerWidth * 0.85, moonTY: window.innerHeight * 0.35, moonSize: window.innerHeight * 0.22, distToMoon: 384400,
+        landerY: 0, landerSpeed: 0, landerFuel: 100, thrustOn: false,
+        particles: [], debris: [], clouds: [],
+        liftoffSubPhase: 0, rocketTilt: 0,
+        orbitSubPhase: 0, orbitVelocity: 0, orbitInsertAngle: 0,
+        phaseTime: 0, lastTS: performance.now(),
+        shakeIntensity: 0, shakeX: 0, shakeY: 0,
+        flyToMoonSubPhase: 1, animTimer: 0,
+        landerX: 0, landerVX: 0, landerVY: 0, landerTilt: 0
+    });
+
+    initStars();
+    mCanvas.width = window.innerWidth;
+    mCanvas.height = window.innerHeight;
+
+    document.getElementById('missionOverlay').classList.add('active');
+    document.getElementById('missionSuccess').classList.remove('show');
+    document.getElementById('missionFail').classList.remove('show');
+
+    // success screen planet
+    const meta = (typeof PLANET_META !== 'undefined' ? PLANET_META[planet] : null) || { emoji: '🌕' };
+    document.getElementById('successIcon').textContent = meta.emoji || '🌕';
+    document.getElementById('successTitle').textContent = planet.toUpperCase() + ' LANDING SUCCESS!';
+    document.getElementById('successSub').textContent =
+        'You guided your spacecraft from Earth to ' + planet + ' and landed safely. Ready to colonize!';
+
+    applyPhase(5);
+    document.getElementById('mPromptText').innerHTML = '<strong>✨ Orbit Capture Confirmed!</strong><br>Entering Lunar Orbit... Launching landing sequence';
+
+    if (missionRafId) cancelAnimationFrame(missionRafId);
+    missionRafId = requestAnimationFrame(missionLoop);
+}
+
 function closeMission() {
     missionActive = false;
     document.getElementById('missionOverlay').classList.remove('active');
@@ -982,7 +1029,51 @@ function mActionClick() {
 /* ── SUCCESS / FAIL ── */
 function showSuccess() {
     missionPhase = 99;
-    document.getElementById('missionSuccess').classList.add('show');
+    const ms = document.getElementById('missionSuccess');
+    if (ms) {
+        ms.classList.add('show');
+        if (missionPlanet === 'Moon') {
+            ms.style.backgroundImage = "url('rover.gif')";
+            ms.style.backgroundSize = "cover";
+            ms.style.backgroundPosition = "center";
+            ms.style.backgroundRepeat = "no-repeat";
+            
+            const badge = ms.querySelector('.ms-badge');
+            if (badge) badge.style.display = 'none';
+            
+            const title = document.getElementById('successTitle');
+            if (title) title.textContent = "Moon Landing Done";
+            
+            const sub = document.getElementById('successSub');
+            if (sub) sub.textContent = "Explore the Moon surface with your rover!";
+            
+            const confirmBtn = ms.querySelector('.ms-confirm');
+            if (confirmBtn) {
+                confirmBtn.textContent = "Explore the Moon surface via Rover";
+                confirmBtn.onclick = function() {
+                    ResourceState.colonizePlanet('Moon');
+                    sessionStorage.setItem('sc_keldey_station_completed', 'true');
+                    window.location.href = 'planet-moon-rover.html';
+                };
+            }
+        } else {
+            ms.style.backgroundImage = 'none';
+            const badge = ms.querySelector('.ms-badge');
+            if (badge) badge.style.display = 'flex';
+            
+            const title = document.getElementById('successTitle');
+            if (title) title.textContent = missionPlanet.toUpperCase() + ' LANDING SUCCESS!';
+            
+            const sub = document.getElementById('successSub');
+            if (sub) sub.textContent = "You guided your spacecraft and landed safely!";
+            
+            const confirmBtn = ms.querySelector('.ms-confirm');
+            if (confirmBtn) {
+                confirmBtn.textContent = "🌟 CONFIRM COLONIZATION";
+                confirmBtn.onclick = confirmColonization;
+            }
+        }
+    }
     MS.shakeIntensity = 0;
 }
 function showFail(title, sub) {
@@ -1011,7 +1102,11 @@ function confirmColonization() {
 
 function retryMission() {
     document.getElementById('missionFail').classList.remove('show');
-    startMission(missionPlanet);
+    if (missionPlanet === 'Moon') {
+        startMissionFromOrbit(missionPlanet);
+    } else {
+        startMission(missionPlanet);
+    }
 }
 
 /* ── RESIZE ── */

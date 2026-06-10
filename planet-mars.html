@@ -130,7 +130,7 @@
 </head>
 <body>
 <canvas class="stars-bg" id="starsBg"></canvas>
-
+ 
 <div class="topbar">
     <div class="topbar-left">
         <button class="back-btn" onclick="goBack()">← Back</button>
@@ -138,7 +138,7 @@
     </div>
     <div class="colony-badge">Colonization: <span id="colonyPct">0</span>%</div>
 </div>
-
+ 
 <div class="main-layout">
     <div class="planet-panel">
         <canvas id="planetCanvas" width="400" height="400"></canvas>
@@ -198,19 +198,19 @@
             <div class="res-grid">
                 <div class="res-mini"><div class="res-mini-icon">🛢️</div><div><div class="res-mini-name">Fuel</div><div class="res-mini-val" id="resFuel">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">⚙️</div><div><div class="res-mini-name">Iron</div><div class="res-mini-val" id="resIron">0</div></div></div>
-                <div class="res-mini"><div class="res-mini-icon">🌲</div><div><div class="res-mini-name">Wood</div><div class="res-mini-val" id="resWood">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">💎</div><div><div class="res-mini-name">Titanium</div><div class="res-mini-val" id="resWood">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">🔩</div><div><div class="res-mini-name">Metal</div><div class="res-mini-val" id="resMetal">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">💧</div><div><div class="res-mini-name">Water</div><div class="res-mini-val" id="resWater">0</div></div></div>
             </div>
         </div>
     </div>
 </div>
-
+ 
 <div class="bottom-bar">
     <button class="launch-btn" onclick="openModal()">🚀 Launch Mission</button>
     <button class="colonize-btn" id="colonizeBtn" onclick="startColonization()">🔴 COLONIZE MARS</button>
 </div>
-
+ 
 <!-- MISSION MODAL -->
 <div class="modal-overlay" id="missionModal">
     <div class="mission-modal">
@@ -222,7 +222,7 @@
             <div class="modal-res-grid">
                 <div class="m-res"><div class="m-res-icon">🛢️</div><div class="m-res-name">Fuel</div><div class="m-res-val" id="mFuel">0</div></div>
                 <div class="m-res"><div class="m-res-icon">⚙️</div><div class="m-res-name">Iron</div><div class="m-res-val" id="mIron">0</div></div>
-                <div class="m-res"><div class="m-res-icon">🌲</div><div class="m-res-name">Wood</div><div class="m-res-val" id="mWood">0</div></div>
+                <div class="m-res"><div class="m-res-icon">💎</div><div class="m-res-name">Titanium</div><div class="m-res-val" id="mWood">0</div></div>
                 <div class="m-res"><div class="m-res-icon">🔩</div><div class="m-res-name">Metal</div><div class="m-res-val" id="mMetal">0</div></div>
                 <div class="m-res"><div class="m-res-icon">💧</div><div class="m-res-name">Water</div><div class="m-res-val" id="mWater">0</div></div>
                 <div class="m-res"><div class="m-res-icon">🔋</div><div class="m-res-name">Oxygen</div><div class="m-res-val" id="mOxy">0</div></div>
@@ -240,7 +240,7 @@
                     <div class="mo-cost">
                         <div class="mo-cost-row">🛢️ Fuel <span>15</span></div>
                         <div class="mo-cost-row">⚙️ Iron <span>20</span></div>
-                        <div class="mo-cost-row">🌲 Wood <span>20</span></div>
+                        <div class="mo-cost-row">💎 Titanium <span>20</span></div>
                         <div class="mo-cost-row">🔩 Metal <span>15</span></div>
                     </div>
                     <div class="mo-inv-tag" id="inv-tag-satellite"></div>
@@ -252,7 +252,7 @@
                     <div class="mo-cost">
                         <div class="mo-cost-row">🛢️ Fuel <span>20</span></div>
                         <div class="mo-cost-row">⚙️ Iron <span>30</span></div>
-                        <div class="mo-cost-row">🌲 Wood <span>25</span></div>
+                        <div class="mo-cost-row">💎 Titanium <span>25</span></div>
                         <div class="mo-cost-row">🔩 Metal <span>20</span></div>
                     </div>
                     <div class="mo-inv-tag" id="inv-tag-rover"></div>
@@ -264,7 +264,7 @@
                     <div class="mo-cost">
                         <div class="mo-cost-row">🛢️ Fuel <span>25</span></div>
                         <div class="mo-cost-row">⚙️ Iron <span>40</span></div>
-                        <div class="mo-cost-row">🌲 Wood <span>30</span></div>
+                        <div class="mo-cost-row">💎 Titanium <span>30</span></div>
                         <div class="mo-cost-row">🔩 Metal <span>25</span></div>
                     </div>
                     <div class="mo-inv-tag" id="inv-tag-lander"></div>
@@ -274,7 +274,7 @@
         </div>
     </div>
 </div>
-
+ 
 <!-- CELEBRATION -->
 <div id="celebOverlay">
     <canvas id="celebCanvas"></canvas>
@@ -293,7 +293,7 @@
         <button class="celeb-close-btn" onclick="finishColonization()">🚀 Continue to Next Mission</button>
     </div>
 </div>
-
+ 
 <script src="js/resource-state.js"></script>
 <script>
 const PLANET = 'Mars';
@@ -301,7 +301,7 @@ let selectedMission = null;
 let planetAngle = 0;
 let activeMissionTimers = {};
 let fireworksRunning = false;
-
+ 
 window.onload = function() {
     if (!sessionStorage.getItem('companyName')) { window.location.href = 'index.html'; return; }
     ResourceState.load();
@@ -310,38 +310,38 @@ window.onload = function() {
     updateAll();
     setInterval(() => { ResourceState.tickTools(); updateAll(); }, 1000);
 };
-
+ 
 function goBack() { window.location.href = 'game.html'; }
-
+ 
 function updateAll() {
     const m = ResourceState.missions[PLANET];
     const r = ResourceState.resources;
     const v = ResourceState.vehicles;
-
+ 
     document.getElementById('satBadge').textContent = m.satellites;
     document.getElementById('rovBadge').textContent = m.rovers;
     document.getElementById('lanBadge').textContent = m.landers;
-
+ 
     setBar('mapFill', m.mappingProgress); setTxt('mapPct', Math.round(m.mappingProgress) + '%');
     setBar('expFill', m.explorationProgress); setTxt('expPct', Math.round(m.explorationProgress) + '%');
     setBar('minFill', m.mineralProgress); setTxt('minPct', Math.round(m.mineralProgress) + '%');
-
+ 
     setTxt('satCount', `${m.satellites}/${m.satelliteGoal}`);
     setTxt('rovCount', `${m.rovers}/${m.roverGoal}`);
     setTxt('lanCount', `${m.landers}/${m.landerGoal}`);
-
+ 
     setGoal('gchk-sat','gp-sat', m.satellites, m.satelliteGoal);
     setGoal('gchk-rov','gp-rov', m.rovers,     m.roverGoal);
     setGoal('gchk-lan','gp-lan', m.landers,     m.landerGoal);
-
+ 
     const pct = ResourceState.getColonizationPercent(PLANET);
     setTxt('colonyPct', pct); setTxt('colonyPctBig', pct);
     setBar('colonyFill', pct);
     document.getElementById('colonizedMsg').style.display = m.colonized ? 'block' : 'none';
-
+ 
     const colBtn = document.getElementById('colonizeBtn');
     if (pct >= 100 && !m.colonized) colBtn.classList.add('show'); else colBtn.classList.remove('show');
-
+ 
     setTxt('invSat', v.satellites); setTxt('invRov', v.rovers); setTxt('invLan', v.landers);
     setTxt('resFuel',  Math.floor(r.fuel  || 0));
     setTxt('resIron',  Math.floor(r.iron  || 0));
@@ -355,7 +355,7 @@ function updateAll() {
     setTxt('mWater', Math.floor(r.water || 0));
     setTxt('mOxy',   Math.floor(r.oxygen|| 0));
     setTxt('miSat', v.satellites); setTxt('miRov', v.rovers); setTxt('miLan', v.landers);
-
+ 
     [['satellite','satellites'],['rover','rovers'],['lander','landers']].forEach(([type, key]) => {
         const n = v[key];
         const noteEl = document.getElementById('mi' + type.charAt(0).toUpperCase() + type.slice(1).replace('satellite','Sat').replace('rover','Rov').replace('lander','Lan') + 'Note');
@@ -365,10 +365,10 @@ function updateAll() {
         if (ne) ne.textContent = n > 0 ? `✅ ${n} ready — FREE launch!` : '⚠️ None — costs resources';
         if (tagEl) tagEl.textContent = n > 0 ? `📦 ${n} in stock — FREE` : '';
     });
-
+ 
     updateActiveMissionsUI();
 }
-
+ 
 function setBar(id, pct) { const el=document.getElementById(id); if(el) el.style.width=Math.min(100,Math.max(0,pct))+'%'; }
 function setTxt(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
 function setGoal(chkId, gpId, cur, goal) {
@@ -376,7 +376,7 @@ function setGoal(chkId, gpId, cur, goal) {
     if(el){el.className='goal-chk '+(done?'done':'pending');el.textContent=done?'✓':'○';}
     setTxt(gpId, `${Math.min(cur,goal)}/${goal}`);
 }
-
+ 
 function updateActiveMissionsUI() {
     const keys=Object.keys(activeMissionTimers), sec=document.getElementById('amSection'), list=document.getElementById('amList');
     if(!keys.length){sec.style.display='none';return;}
@@ -388,11 +388,11 @@ function updateActiveMissionsUI() {
         return `<div class="am-item"><div class="am-dot"></div><div class="am-txt">${am.label} → Mars</div><div class="am-pct">${pct}% · ${rem}s</div></div>`;
     }).join('');
 }
-
+ 
 function openModal() { selectedMission=null; document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected')); document.getElementById('missionModal').classList.add('open'); updateAll(); }
 function closeModal() { document.getElementById('missionModal').classList.remove('open'); }
 function selectMission(t) { selectedMission=t; document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected')); document.getElementById('opt-'+t).classList.add('selected'); }
-
+ 
 function confirmLaunch() {
     if(!selectedMission){showNotif('Select a mission type first!','error');return;}
     const labels={satellite:'🛰️ Satellite',rover:'🚗 Rover',lander:'🛬 Lander'};
@@ -411,7 +411,7 @@ function confirmLaunch() {
     showNotif(hasInv?`📦 Using inventory ${selectedMission}! FREE launch!`:'🚀 '+result.message);
     closeModal(); updateAll();
 }
-
+ 
 function startColonization() {
     const m=ResourceState.missions[PLANET];
     document.getElementById('cs-sat').textContent=m.satellites;
@@ -420,7 +420,7 @@ function startColonization() {
     document.getElementById('celebOverlay').classList.add('show');
     startFireworks();
 }
-
+ 
 function finishColonization() {
     fireworksRunning=false;
     document.getElementById('celebOverlay').classList.remove('show');
@@ -428,7 +428,7 @@ function finishColonization() {
     showNotif('🎉 Mars colonized! Venus unlocked!');
     setTimeout(()=>{window.location.href='game.html';},1500);
 }
-
+ 
 function startFireworks() {
     const canvas=document.getElementById('celebCanvas');
     canvas.width=window.innerWidth; canvas.height=window.innerHeight;
@@ -460,7 +460,7 @@ function startFireworks() {
     }
     requestAnimationFrame(draw);
 }
-
+ 
 // Planet canvas
 const pCanvas=document.getElementById('planetCanvas'), pCtx=pCanvas.getContext('2d');
 function animatePlanet(){pCtx.clearRect(0,0,400,400);drawMars();planetAngle+=0.003;requestAnimationFrame(animatePlanet);}
@@ -514,7 +514,7 @@ function drawMars(){
         pCtx.fillStyle='#e85d04'; pCtx.fillRect(lx,ly-10,7,5); pCtx.restore();
     }
 }
-
+ 
 function initStars(){
     const c=document.getElementById('starsBg'); c.width=window.innerWidth; c.height=window.innerHeight;
     const ctx=c.getContext('2d');
@@ -522,9 +522,9 @@ function initStars(){
     function draw(){ctx.clearRect(0,0,c.width,c.height);const t=Date.now()*0.001;stars.forEach(s=>{const a=Math.max(0,0.25+Math.sin(t+s.t)*0.4);ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});requestAnimationFrame(draw);}
     draw(); window.addEventListener('resize',()=>{c.width=window.innerWidth;c.height=window.innerHeight;});
 }
-
+ 
 function showNotif(msg,type='success'){const n=document.createElement('div');n.className='notif'+(type==='error'?' error':'');n.textContent=msg;document.body.appendChild(n);setTimeout(()=>{if(n.parentNode)n.remove();},3000);}
-
+ 
 document.getElementById('missionModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.getElementById('celebOverlay').addEventListener('click',function(e){if(e.target===this){fireworksRunning=false;finishColonization();}});
 </script>

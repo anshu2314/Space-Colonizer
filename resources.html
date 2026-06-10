@@ -330,8 +330,8 @@
     <button class="back-btn" onclick="goBackToGame()">← Back to Game</button>
     
     <div class="header">
-        <h1>🏭 Resource Management Center</h1>
-        <p>Manage your resources and upgrade your tools</p>
+        <h1>⚙️ Lander Upgrades Lab</h1>
+        <p>Develop advanced Lander subsystems to automatically extract resources from the Moon</p>
     </div>
 
     <div class="resource-container">
@@ -361,9 +361,9 @@
                     <div class="resource-glow iron-glow"></div>
                 </div>
                 <div class="resource-card wood-card">
-                    <div class="resource-icon">🌲</div>
+                    <div class="resource-icon">💎</div>
                     <div class="resource-info">
-                        <div class="resource-name">Wood</div>
+                        <div class="resource-name">Titanium</div>
                         <div class="resource-count" id="woodCount">0</div>
                     </div>
                     <div class="resource-glow wood-glow"></div>
@@ -388,24 +388,20 @@
         </div>
         
         <div class="action-buttons">
-            <button onclick="gatherResources()" class="gather-btn">
-                <span class="btn-icon">⛏️</span>
-                Gather Resources
-            </button>
-            <button onclick="toggleSection('resourceTools')" class="tools-btn">
-                <span class="btn-icon">🔧</span>
-                Resource Tools
+            <button onclick="toggleSection('resourceTools')" class="tools-btn" style="width: 100%; justify-content: center;">
+                <span class="btn-icon">⚙️</span>
+                Upgrade Lander Modules
             </button>
         </div>
         
-        <div id="resourceTools" class="resource-tools hidden">
-            <h3 style="text-align: center; margin-bottom: 20px;">🔧 Resource Tools</h3>
+        <div id="resourceTools" class="resource-tools">
+            <h3 style="text-align: center; margin-bottom: 20px;">🛰️ Lander Subsystems</h3>
             
             <div class="tool-card" onclick="openToolPage('wood')">
                 <div class="tool-info">
                     <div>
-                        <h4>🌲 Woodcutter</h4>
-                        <p>Automatically generates wood resources</p>
+                        <h4>💎 Lander Titanium Sifter</h4>
+                        <p>Improves automatic Titanium extraction rate per deployed Lander</p>
                     </div>
                     <div class="tool-level" id="woodLevel">Level 0</div>
                 </div>
@@ -414,8 +410,8 @@
             <div class="tool-card" onclick="openToolPage('water')">
                 <div class="tool-info">
                     <div>
-                        <h4>💧 Water Absorber</h4>
-                        <p>Automatically generates water resources</p>
+                        <h4>💧 Lander Water Condenser</h4>
+                        <p>Improves automatic Water extraction rate per deployed Lander</p>
                     </div>
                     <div class="tool-level" id="waterLevel">Level 0</div>
                 </div>
@@ -424,8 +420,8 @@
             <div class="tool-card" onclick="openToolPage('metal')">
                 <div class="tool-info">
                     <div>
-                        <h4>🔩 Metal Extractor</h4>
-                        <p>Automatically generates metal resources</p>
+                        <h4>🔩 Lander Metal Refiner</h4>
+                        <p>Improves automatic Metal extraction rate per deployed Lander</p>
                     </div>
                     <div class="tool-level" id="metalLevel">Level 0</div>
                 </div>

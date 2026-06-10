@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌲 Woodcutter - Space Colonizer</title>
+    <title>💎 Lander Titanium Sifter - Space Colonizer</title>
     <style>
         body {
             margin: 0;
@@ -362,17 +362,17 @@
 <body>
     <div class="tool-container">
         <div class="tool-header">
-            <button class="back-btn" onclick="goBackToResources()">← Back to Resources</button>
+            <button class="back-btn" onclick="goBackToResources()">← Back to Lander Upgrades</button>
             <div class="tool-title">
-                <div class="tool-icon">🌲</div>
-                <h1 class="tool-name">Woodcutter</h1>
+                <div class="tool-icon">💎</div>
+                <h1 class="tool-name">Lander Titanium Sifter</h1>
             </div>
         </div>
 
         <div class="tool-description">
             <p class="description-text">
-                The Woodcutter is an automated harvesting system that continuously gathers wood from nearby forests. 
-                Essential for construction projects and fuel production, this tool becomes more efficient with each upgrade.
+                The Lander Titanium Sifter processes lunar regolith to extract pure titanium.
+                Essential for structural parts, satellite/rover construction, and vehicle upgrades, its extraction speed increases with each upgrade level and active deployed Moon Landers.
             </p>
         </div>
 
@@ -383,11 +383,11 @@
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="generationRate">0</div>
-                <div class="stat-label">Wood/Second</div>
+                <div class="stat-label">Titanium/Second</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="totalGenerated">0</div>
-                <div class="stat-label">Total Generated</div>
+                <div class="stat-label">Total Sifted</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="efficiency">0%</div>
@@ -397,14 +397,14 @@
 
         <div class="upgrade-section">
             <div class="upgrade-header">
-                <h2>🔧 Tool Upgrade</h2>
+                <h2>🔧 Subsystem Upgrade</h2>
             </div>
             
             <div class="upgrade-preview">
                 <div class="level-display">
                     <div class="level-number" id="currentLevelDisplay">0</div>
                     <div class="level-label">Current Level</div>
-                    <div style="margin-top: 10px; color: #66fcf1;" id="currentGenDisplay">0 wood/sec</div>
+                    <div style="margin-top: 10px; color: #66fcf1;" id="currentGenDisplay">0 titanium/sec</div>
                 </div>
                 
                 <div class="upgrade-arrow">→</div>
@@ -412,7 +412,7 @@
                 <div class="level-display">
                     <div class="level-number" id="nextLevelDisplay">1</div>
                     <div class="level-label">Next Level</div>
-                    <div style="margin-top: 10px; color: #66fcf1;" id="nextGenDisplay">2 wood/sec</div>
+                    <div style="margin-top: 10px; color: #66fcf1;" id="nextGenDisplay">2 titanium/sec</div>
                 </div>
             </div>
 
@@ -422,7 +422,7 @@
             </div>
 
             <button class="upgrade-btn" id="upgradeBtn" onclick="upgradeTool()">
-                🔧 Upgrade Woodcutter
+                🔧 Upgrade Titanium Sifter
             </button>
         </div>
 
@@ -431,9 +431,9 @@
             <div class="resource-display">
                 <div class="resource-item" id="woodResource">
                     <div class="generation-indicator" id="woodGenIndicator">+0/sec</div>
-                    <div class="resource-icon">🌲</div>
+                    <div class="resource-icon">💎</div>
                     <div class="resource-count" id="woodCount">0</div>
-                    <div class="resource-name">Wood</div>
+                    <div class="resource-name">Titanium</div>
                 </div>
                 <div class="resource-item">
                     <div class="resource-icon">💧</div>
@@ -456,8 +456,7 @@
 
     <script src="js/resource-state.js"></script>
     <script>
-        let totalWoodGenerated = parseInt(sessionStorage.getItem('sc_total_wood_generated') || '0', 10);
-        let lastWoodCount = 0;
+        let totalTitaniumGenerated = parseInt(sessionStorage.getItem('sc_total_titanium_generated') || '0', 10);
 
         // Initialize tool page
         window.onload = function() {
@@ -471,26 +470,27 @@
                 updateGenerationIndicator();
             }, 1000);
             
-            console.log('🌲 Woodcutter tool page loaded!');
+            console.log('💎 Lander Titanium Sifter page loaded!');
         }
 
         // Generate resources from tools
         function generateResources() {
             const woodTool = ResourceState.tools.wood;
-            if (woodTool.level > 0) {
-                const generation = woodTool.level * 2;
+            const activeLanders = ResourceState.missions.Moon?.landers || 0;
+            if (woodTool.level > 0 && activeLanders > 0) {
+                const generation = woodTool.level * activeLanders;
                 const oldAmount = ResourceState.resources.wood;
                 ResourceState.resources.wood += generation;
-                totalWoodGenerated += generation;
-                sessionStorage.setItem('sc_total_wood_generated', totalWoodGenerated.toString());
+                totalTitaniumGenerated += generation;
+                sessionStorage.setItem('sc_total_titanium_generated', totalTitaniumGenerated.toString());
                 
-                // Show floating animation for wood generation
+                // Show floating animation for titanium generation
                 if (generation > 0) {
                     showFloatingText(`+${generation}`, 'woodResource');
                 }
                 
                 ResourceState.save();
-                console.log(`🏭 Wood tool generated ${generation} wood (${oldAmount} → ${ResourceState.resources.wood})`);
+                console.log(`🏭 Titanium Sifter generated ${generation} titanium (${oldAmount} → ${ResourceState.resources.wood})`);
             }
         }
 
@@ -509,7 +509,7 @@
             
             document.getElementById('currentLevel').textContent = toolInfo.level;
             document.getElementById('generationRate').textContent = toolInfo.generationRate;
-            document.getElementById('totalGenerated').textContent = totalWoodGenerated;
+            document.getElementById('totalGenerated').textContent = totalTitaniumGenerated;
             
             if (toolStats && toolStats.totalInvested.total > 0) {
                 const efficiency = Math.round((toolInfo.generationRate / toolStats.totalInvested.total) * 100);
@@ -526,14 +526,14 @@
 
             document.getElementById('currentLevelDisplay').textContent = preview.currentLevel;
             document.getElementById('nextLevelDisplay').textContent = preview.nextLevel;
-            document.getElementById('currentGenDisplay').textContent = `${preview.currentGeneration} wood/sec`;
-            document.getElementById('nextGenDisplay').textContent = `${preview.nextGeneration} wood/sec`;
+            document.getElementById('currentGenDisplay').textContent = `${preview.currentGeneration} titanium/sec`;
+            document.getElementById('nextGenDisplay').textContent = `${preview.nextGeneration} titanium/sec`;
 
             // Update cost breakdown
             const costContainer = document.getElementById('costBreakdown');
             costContainer.innerHTML = '';
 
-            const costIcons = { wood: '🌲', water: '💧', metal: '🔩' };
+            const costIcons = { wood: '💎', water: '💧', metal: '🔩' };
             
             Object.entries(preview.costs).forEach(([resource, cost]) => {
                 const hasEnough = ResourceState.resources[resource] >= cost;
@@ -543,7 +543,7 @@
                 costItem.innerHTML = `
                     <div class="cost-icon">${costIcons[resource] || '❓'}</div>
                     <div class="cost-amount">${cost}</div>
-                    <div class="cost-label">${resource.toUpperCase()}</div>
+                    <div class="cost-label">${resource === 'wood' ? 'TITANIUM' : resource.toUpperCase()}</div>
                     <div class="cost-label">Have: ${ResourceState.resources[resource]}</div>
                 `;
                 
@@ -571,7 +571,8 @@
 
         // Update generation indicator
         function updateGenerationIndicator() {
-            const generationRate = ResourceState.tools.wood.level * 2;
+            const activeLanders = ResourceState.missions.Moon?.landers || 0;
+            const generationRate = ResourceState.tools.wood.level * activeLanders;
             document.getElementById('woodGenIndicator').textContent = `+${generationRate}/sec`;
         }
 

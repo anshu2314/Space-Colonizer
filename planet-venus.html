@@ -183,7 +183,7 @@
             <div class="res-grid">
                 <div class="res-mini"><div class="res-mini-icon">🛢️</div><div><div class="res-mini-name">Fuel</div><div class="res-mini-val" id="resFuel">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">⚙️</div><div><div class="res-mini-name">Iron</div><div class="res-mini-val" id="resIron">0</div></div></div>
-                <div class="res-mini"><div class="res-mini-icon">🌲</div><div><div class="res-mini-name">Wood</div><div class="res-mini-val" id="resWood">0</div></div></div>
+                <div class="res-mini"><div class="res-mini-icon">💎</div><div><div class="res-mini-name">Titanium</div><div class="res-mini-val" id="resWood">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">🔩</div><div><div class="res-mini-name">Metal</div><div class="res-mini-val" id="resMetal">0</div></div></div>
                 <div class="res-mini"><div class="res-mini-icon">💧</div><div><div class="res-mini-name">Water</div><div class="res-mini-val" id="resWater">0</div></div></div>
             </div>
@@ -194,7 +194,7 @@
     <button class="launch-btn" onclick="openModal()">🚀 Launch Mission</button>
     <button class="colonize-btn" id="colonizeBtn" onclick="startColonization()">☁️ COLONIZE VENUS</button>
 </div>
-
+ 
 <!-- MISSION MODAL -->
 <div class="modal-overlay" id="missionModal">
     <div class="mission-modal">
@@ -206,7 +206,7 @@
             <div class="modal-res-grid">
                 <div class="m-res"><div class="m-res-icon">🛢️</div><div class="m-res-name">Fuel</div><div class="m-res-val" id="mFuel">0</div></div>
                 <div class="m-res"><div class="m-res-icon">⚙️</div><div class="m-res-name">Iron</div><div class="m-res-val" id="mIron">0</div></div>
-                <div class="m-res"><div class="m-res-icon">🌲</div><div class="m-res-name">Wood</div><div class="m-res-val" id="mWood">0</div></div>
+                <div class="m-res"><div class="m-res-icon">💎</div><div class="m-res-name">Titanium</div><div class="m-res-val" id="mWood">0</div></div>
                 <div class="m-res"><div class="m-res-icon">🔩</div><div class="m-res-name">Metal</div><div class="m-res-val" id="mMetal">0</div></div>
                 <div class="m-res"><div class="m-res-icon">💧</div><div class="m-res-name">Water</div><div class="m-res-val" id="mWater">0</div></div>
                 <div class="m-res"><div class="m-res-icon">🔋</div><div class="m-res-name">Oxygen</div><div class="m-res-val" id="mOxy">0</div></div>
@@ -220,19 +220,19 @@
                 <div class="m-opt" id="opt-satellite" onclick="selectMission('satellite')">
                     <div class="mo-icon">🛰️</div><div class="mo-title">Satellite</div>
                     <div class="mo-effect">Maps the surface through thick clouds.</div>
-                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>18</span></div><div class="mo-cost-row">⚙️ Iron <span>25</span></div><div class="mo-cost-row">🌲 Wood <span>22</span></div><div class="mo-cost-row">🔩 Metal <span>18</span></div></div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>18</span></div><div class="mo-cost-row">⚙️ Iron <span>25</span></div><div class="mo-cost-row">💎 Titanium <span>22</span></div><div class="mo-cost-row">🔩 Metal <span>18</span></div></div>
                     <div class="mo-inv-tag" id="inv-tag-satellite"></div>
                 </div>
                 <div class="m-opt" id="opt-rover" onclick="selectMission('rover')">
                     <div class="mo-icon">🚗</div><div class="mo-title">Rover</div>
                     <div class="mo-effect">Survives extreme heat to explore surface.</div>
-                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>22</span></div><div class="mo-cost-row">⚙️ Iron <span>35</span></div><div class="mo-cost-row">🌲 Wood <span>28</span></div><div class="mo-cost-row">🔩 Metal <span>22</span></div></div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>22</span></div><div class="mo-cost-row">⚙️ Iron <span>35</span></div><div class="mo-cost-row">💎 Titanium <span>28</span></div><div class="mo-cost-row">🔩 Metal <span>22</span></div></div>
                     <div class="mo-inv-tag" id="inv-tag-rover"></div>
                 </div>
                 <div class="m-opt" id="opt-lander" onclick="selectMission('lander')">
                     <div class="mo-icon">🛬</div><div class="mo-title">Lander</div>
                     <div class="mo-effect">Surveys volcanic minerals.</div>
-                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>28</span></div><div class="mo-cost-row">⚙️ Iron <span>45</span></div><div class="mo-cost-row">🌲 Wood <span>35</span></div><div class="mo-cost-row">🔩 Metal <span>28</span></div></div>
+                    <div class="mo-cost"><div class="mo-cost-row">🛢️ Fuel <span>28</span></div><div class="mo-cost-row">⚙️ Iron <span>45</span></div><div class="mo-cost-row">💎 Titanium <span>35</span></div><div class="mo-cost-row">🔩 Metal <span>28</span></div></div>
                     <div class="mo-inv-tag" id="inv-tag-lander"></div>
                 </div>
             </div>
@@ -240,7 +240,7 @@
         </div>
     </div>
 </div>
-
+ 
 <!-- CELEBRATION -->
 <div id="celebOverlay">
     <canvas id="celebCanvas"></canvas>
@@ -256,12 +256,12 @@
         <button class="celeb-close-btn" onclick="finishColonization()">🚀 Continue to Next Mission</button>
     </div>
 </div>
-
+ 
 <script src="js/resource-state.js"></script>
 <script>
 const PLANET='Venus';
 let selectedMission=null,planetAngle=0,activeMissionTimers={},fireworksRunning=false;
-
+ 
 window.onload=function(){
     if(!sessionStorage.getItem('companyName')){window.location.href='index.html';return;}
     ResourceState.load();initStars();animatePlanet();updateAll();
@@ -298,44 +298,19 @@ function setBar(id,pct){const el=document.getElementById(id);if(el)el.style.widt
 function setTxt(id,val){const el=document.getElementById(id);if(el)el.textContent=val;}
 function setGoal(ck,gp,c,g){const done=c>=g,el=document.getElementById(ck);if(el){el.className='goal-chk '+(done?'done':'pending');el.textContent=done?'✓':'○';}setTxt(gp,`${Math.min(c,g)}/${g}`);}
 function updateActiveMissionsUI(){const keys=Object.keys(activeMissionTimers),sec=document.getElementById('amSection'),list=document.getElementById('amList');if(!keys.length){sec.style.display='none';return;}sec.style.display='block';list.innerHTML=keys.map(id=>{const am=activeMissionTimers[id],e=Date.now()-am.startTime,p=Math.min(100,Math.round((e/am.duration)*100)),r=Math.max(0,Math.ceil((am.duration-e)/1000));return`<div class="am-item"><div class="am-dot"></div><div class="am-txt">${am.label} → Venus</div><div class="am-pct">${p}% · ${r}s</div></div>`;}).join('');}
-function openModal(){selectedMission=null;document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected'));document.getElementById('missionModal').classList.add('open');updateAll();}
-function closeModal(){document.getElementById('missionModal').classList.remove('open');}
-function selectMission(t){selectedMission=t;document.querySelectorAll('.m-opt').forEach(e=>e.classList.remove('selected'));document.getElementById('opt-'+t).classList.add('selected');}
-function confirmLaunch(){
-    if(!selectedMission){showNotif('Select a mission type first!','error');return;}
-    const labels={satellite:'🛰️ Satellite',rover:'🚗 Rover',lander:'🛬 Lander'};
-    const vehicleKey=selectedMission+'s',hasInv=(ResourceState.vehicles[vehicleKey]||0)>0;
-    const missionId=Date.now()+'_'+Math.random();
-    let result;
-    if(hasInv){ResourceState.useVehicleFromInventory(selectedMission);result=ResourceState.launchMission(PLANET,selectedMission,updateAll,(mData)=>{delete activeMissionTimers[missionId];showNotif(`✅ ${labels[selectedMission]} complete!`);updateAll();},true);}
-    else{result=ResourceState.launchMission(PLANET,selectedMission,updateAll,(mData)=>{delete activeMissionTimers[missionId];showNotif(`✅ ${labels[selectedMission]} complete!`);updateAll();});}
-    if(!result.success){showNotif('❌ '+result.message,'error');return;}
-    activeMissionTimers[missionId]={type:selectedMission,label:labels[selectedMission],startTime:Date.now(),duration:result.durationMs};
-    showNotif(hasInv?`📦 Inventory ${selectedMission} launched FREE!`:'🚀 '+result.message);
-    closeModal();updateAll();
-}
-function startColonization(){const m=ResourceState.missions[PLANET];document.getElementById('cs-sat').textContent=m.satellites;document.getElementById('cs-rov').textContent=m.rovers;document.getElementById('cs-lan').textContent=m.landers;document.getElementById('celebOverlay').classList.add('show');startFireworks();}
-function finishColonization(){fireworksRunning=false;document.getElementById('celebOverlay').classList.remove('show');ResourceState.colonizePlanet(PLANET);showNotif('🎉 Venus colonized! Mercury unlocked!');setTimeout(()=>{window.location.href='game.html';},1500);}
-function startFireworks(){const canvas=document.getElementById('celebCanvas');canvas.width=window.innerWidth;canvas.height=window.innerHeight;const ctx=canvas.getContext('2d'),particles=[];fireworksRunning=true;function burst(x,y){const colors=['#ffd700','#ffc649','#ff8c00','#fff','#66fcf1','#ff6b35','#7b2ff7'];for(let i=0;i<80;i++){const a=Math.random()*Math.PI*2,sp=2+Math.random()*8;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,life:1,decay:0.012+Math.random()*0.015,color:colors[Math.floor(Math.random()*colors.length)],size:2+Math.random()*4,trail:[]});}}let lb=0;function draw(ts){if(!fireworksRunning)return;ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,0,canvas.width,canvas.height);if(ts-lb>600){burst(canvas.width*(0.2+Math.random()*0.6),canvas.height*(0.1+Math.random()*0.5));lb=ts;}for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.trail.push({x:p.x,y:p.y});if(p.trail.length>6)p.trail.shift();p.x+=p.vx;p.y+=p.vy;p.vy+=0.15;p.life-=p.decay;if(p.life<=0){particles.splice(i,1);continue;}ctx.save();p.trail.forEach((pt,ti)=>{ctx.globalAlpha=(ti/p.trail.length)*p.life*0.4;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(pt.x,pt.y,p.size*0.5,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=p.life;ctx.fillStyle=p.color;ctx.shadowBlur=10;ctx.shadowColor=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.restore();}requestAnimationFrame(draw);}requestAnimationFrame(draw);}
-
+// Planet canvas
 const pCanvas=document.getElementById('planetCanvas'),pCtx=pCanvas.getContext('2d');
 function animatePlanet(){pCtx.clearRect(0,0,400,400);drawVenus();planetAngle+=0.002;requestAnimationFrame(animatePlanet);}
 function drawVenus(){
     const cx=200,cy=200,r=160,t=Date.now()*0.001,m=ResourceState.missions[PLANET];
     const glow=pCtx.createRadialGradient(cx,cy,r*0.8,cx,cy,r*1.7);glow.addColorStop(0,'rgba(255,198,73,0.2)');glow.addColorStop(1,'rgba(255,198,73,0)');pCtx.fillStyle=glow;pCtx.beginPath();pCtx.arc(cx,cy,r*1.7,0,Math.PI*2);pCtx.fill();
-    // Atmospheric haze
     const atm=pCtx.createRadialGradient(cx,cy,r,cx,cy,r*1.15);atm.addColorStop(0,'rgba(255,160,0,0.3)');atm.addColorStop(1,'rgba(255,160,0,0)');pCtx.fillStyle=atm;pCtx.beginPath();pCtx.arc(cx,cy,r*1.15,0,Math.PI*2);pCtx.fill();
-    // Planet base
     const grad=pCtx.createRadialGradient(cx-r*0.3,cy-r*0.3,0,cx,cy,r);grad.addColorStop(0,'#ffe0a0');grad.addColorStop(0.5,'#ffc649');grad.addColorStop(1,'#8b5a00');pCtx.fillStyle=grad;pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.fill();
-    // Rotating cloud bands
     pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.translate(cx,cy);pCtx.rotate(planetAngle*0.5);
     for(let i=-4;i<=4;i++){pCtx.fillStyle=`rgba(255,${220+i*5},${100+i*10},0.25)`;pCtx.fillRect(-r,i*r*0.22,r*2,r*0.2);}
-    // Swirl clouds
     for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2,cx2=Math.cos(a)*r*0.4,cy2=Math.sin(a)*r*0.4;pCtx.fillStyle='rgba(255,255,255,0.12)';pCtx.beginPath();pCtx.arc(cx2,cy2,r*0.25,0,Math.PI*2);pCtx.fill();}
     pCtx.restore();
-    // Highlight
     pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();const hl=pCtx.createRadialGradient(cx-r*0.45,cy-r*0.45,0,cx,cy,r);hl.addColorStop(0,'rgba(255,255,255,0.3)');hl.addColorStop(1,'rgba(255,255,255,0)');pCtx.fillStyle=hl;pCtx.fillRect(cx-r,cy-r,r*2,r*2);pCtx.restore();
-    // Satellites
     for(let i=0;i<m.satellites;i++){const orR=r+28+i*20,ang=t*(0.7+i*0.2)+(i*Math.PI*2/Math.max(m.satellites,1));const sx=cx+Math.cos(ang)*orR,sy=cy+Math.sin(ang)*orR*0.38;pCtx.strokeStyle='rgba(255,198,73,0.2)';pCtx.lineWidth=1;pCtx.beginPath();pCtx.ellipse(cx,cy,orR,orR*0.38,0,0,Math.PI*2);pCtx.stroke();pCtx.fillStyle='#ffc649';pCtx.beginPath();pCtx.arc(sx,sy,5,0,Math.PI*2);pCtx.fill();pCtx.fillStyle='#d4941a';pCtx.fillRect(sx-11,sy-2,7,4);pCtx.fillRect(sx+4,sy-2,7,4);}
     for(let i=0;i<m.rovers;i++){const a=(i/Math.max(m.rovers,1))*Math.PI*2+planetAngle,rx=cx+Math.cos(a)*r*0.84,ry=cy+Math.sin(a)*r*0.84;pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.fillStyle='#ff8f00';pCtx.fillRect(rx-6,ry-4,12,6);pCtx.fillStyle='#e65100';pCtx.beginPath();pCtx.arc(rx-5,ry+3,2.5,0,Math.PI*2);pCtx.fill();pCtx.beginPath();pCtx.arc(rx+5,ry+3,2.5,0,Math.PI*2);pCtx.fill();pCtx.restore();}
     for(let i=0;i<m.landers;i++){const a=(i/Math.max(m.landers,1))*Math.PI*2+planetAngle+0.5,lx=cx+Math.cos(a)*r*0.9,ly=cy+Math.sin(a)*r*0.9;pCtx.save();pCtx.beginPath();pCtx.arc(cx,cy,r,0,Math.PI*2);pCtx.clip();pCtx.strokeStyle='#fff';pCtx.lineWidth=1.5;pCtx.beginPath();pCtx.moveTo(lx,ly);pCtx.lineTo(lx,ly-10);pCtx.stroke();pCtx.fillStyle='#ffc649';pCtx.fillRect(lx,ly-10,7,5);pCtx.restore();}

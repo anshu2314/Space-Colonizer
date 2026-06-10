@@ -11,7 +11,7 @@ class ResourceState {
         metal: { level: 0, cost: { wood: 25, water: 20, metal: 20 } }
     };
 
-    static defaultVehicles = { satellites: 0, rovers: 0, landers: 0 };
+    static defaultVehicles = { satellites: 3, rovers: 5, landers: 5 };
 
     static defaultMissions = {
         Moon: {
@@ -150,12 +150,25 @@ class ResourceState {
     // ── GENERATE RESOURCES FROM TOOLS (call every second) ──
     static tickTools() {
         let any = false;
+        const activeLanders = ResourceState.missions.Moon?.landers || 0;
+        
+        // Landers generate fuel passively
+        if (activeLanders > 0) {
+            ResourceState.resources.fuel = (ResourceState.resources.fuel || 0) + activeLanders * 2;
+            any = true;
+        }
+
+        // Lander upgrades generate other resources (Titanium, Water, Metal)
         Object.entries(ResourceState.tools).forEach(([type, tool]) => {
-            if (tool.level > 0) {
-                ResourceState.resources[type] = (ResourceState.resources[type] || 0) + tool.level * 2;
+            if (activeLanders > 0) {
+                // Lander baseline slow passive yield is 0.2/sec per active lander, boosted by tool level
+                const baseYield = activeLanders * 0.2;
+                const upgradedYield = tool.level * activeLanders;
+                ResourceState.resources[type] = (ResourceState.resources[type] || 0) + baseYield + upgradedYield;
                 any = true;
             }
         });
+
         if (any) ResourceState.save();
         return any;
     }
@@ -166,7 +179,8 @@ class ResourceState {
         Object.entries(costs).forEach(([res, cost]) => {
             if ((ResourceState.resources[res] || 0) < cost) {
                 canBuy = false;
-                missing.push(`${res}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
+                const displayName = res === 'wood' ? 'titanium' : res;
+                missing.push(`${displayName}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
             }
         });
         if (!canBuy) return { success: false, message: `Not enough resources! Missing: ${missing.join(', ')}` };
@@ -190,7 +204,8 @@ class ResourceState {
             Object.entries(costs).forEach(([res, cost]) => {
                 if ((ResourceState.resources[res] || 0) < cost) {
                     canLaunch = false;
-                    missing.push(`${res}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
+                    const displayName = res === 'wood' ? 'titanium' : res;
+                    missing.push(`${displayName}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
                 }
             });
             if (!canLaunch) return { success: false, message: `Not enough resources! Missing: ${missing.join(', ')}` };
@@ -277,14 +292,15 @@ class ResourceState {
 
     // ── TOOL METHODS ──
     static getToolInfo(toolType) {
-        const names = { wood: 'Woodcutter', water: 'Water Absorber', metal: 'Metal Extractor' };
-        const icons = { wood: '🌲', water: '💧', metal: '🔩' };
+        const names = { wood: 'Lander Titanium Sifter', water: 'Lander Water Condenser', metal: 'Lander Metal Refiner' };
+        const icons = { wood: '💎', water: '💧', metal: '🔩' };
+        const activeLanders = ResourceState.missions.Moon?.landers || 0;
         return {
-            name: names[toolType] || 'Unknown Tool',
+            name: names[toolType] || 'Unknown Upgrade',
             icon: icons[toolType] || '🔧',
             level: ResourceState.tools[toolType]?.level || 0,
             cost: ResourceState.tools[toolType]?.cost || {},
-            generationRate: (ResourceState.tools[toolType]?.level || 0) * 2
+            generationRate: (ResourceState.tools[toolType]?.level || 0) * activeLanders
         };
     }
 
@@ -296,7 +312,8 @@ class ResourceState {
         Object.entries(tool.cost).forEach(([res, cost]) => {
             if ((ResourceState.resources[res] || 0) < cost) {
                 canBuy = false;
-                missing.push(`${res}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
+                const displayName = res === 'wood' ? 'titanium' : res;
+                missing.push(`${displayName}: need ${cost}, have ${Math.floor(ResourceState.resources[res] || 0)}`);
             }
         });
         if (!canBuy) return { success: false, message: `Not enough resources! Missing: ${missing.join(', ')}` };
@@ -308,16 +325,18 @@ class ResourceState {
             tool.cost[res] = Math.floor(tool.cost[res] * 1.5);
         });
         ResourceState.save();
-        const rate = tool.level * 2;
+        const activeLanders = ResourceState.missions.Moon?.landers || 0;
+        const rate = tool.level * activeLanders;
         return { success: true, message: `${ResourceState.getToolInfo(toolType).name} → Level ${tool.level}! Generates ${rate}/sec`, newLevel: tool.level, generationRate: rate, newCosts: { ...tool.cost } };
     }
 
     static getUpgradePreview(toolType) {
         const tool = ResourceState.tools[toolType];
         if (!tool) return null;
+        const activeLanders = ResourceState.missions.Moon?.landers || 0;
         return {
             currentLevel: tool.level, nextLevel: tool.level + 1,
-            currentGeneration: tool.level * 2, nextGeneration: (tool.level + 1) * 2,
+            currentGeneration: tool.level * activeLanders, nextGeneration: (tool.level + 1) * activeLanders,
             costs: { ...tool.cost },
             canAfford: Object.entries(tool.cost).every(([r, c]) => (ResourceState.resources[r] || 0) >= c)
         };

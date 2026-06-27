@@ -436,11 +436,87 @@
             transform: scale(1.02);
             box-shadow: 0 0 15px var(--accent-glow);
         }
+
+        /* Mobile Touch Controls */
+        .mobile-controls {
+            display: none; /* Hidden on desktop */
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .d-pad {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            gap: 10px;
+            float: left;
+        }
+        
+        .d-up { grid-column: 2; grid-row: 1; }
+        .d-left { grid-column: 1; grid-row: 2; }
+        .d-right { grid-column: 3; grid-row: 2; }
+        .d-down { grid-column: 2; grid-row: 2; }
+        
+        .action-pad {
+            pointer-events: auto;
+            display: grid;
+            grid-template-columns: 70px 70px;
+            gap: 15px;
+            float: right;
+            margin-top: 50px;
+        }
+        
+        .d-btn, .a-btn {
+            background: rgba(6, 18, 36, 0.85);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--accent);
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+        }
+        
+        .d-btn:active, .a-btn:active {
+            background: rgba(102, 252, 241, 0.4);
+            transform: scale(0.92);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls { display: block; }
+            .radio-comms-panel { display: none; } /* Hide chat on mobile to make room */
+            .topbar { flex-direction: column; gap: 10px; }
+            .minimap-container { top: auto; bottom: 180px; right: 20px; transform: scale(0.8); transform-origin: bottom right; }
+            .context-prompt { bottom: 160px; }
+        }
     </style>
 </head>
 <body>
 
-<div class="screen-container">
+<!-- Mobile Touch Controls -->
+<div class="mobile-controls" id="mobileControls">
+    <div class="d-pad">
+        <div class="d-btn d-up" id="btnUp">▲</div>
+        <div class="d-btn d-left" id="btnLeft">◀</div>
+        <div class="d-btn d-right" id="btnRight">▶</div>
+        <div class="d-btn d-down" id="btnDown">▼</div>
+    </div>
+    <div class="action-pad">
+        <div class="a-btn" id="btnActionE">E</div>
+        <div class="a-btn" id="btnActionF">F</div>
+    </div>
+</div><div class="screen-container">
     <canvas id="explorationCanvas"></canvas>
 
     <!-- TOPBAR HUD -->
@@ -565,6 +641,35 @@
         }
     });
     window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+    // Mobile Touch Controls mapping to keyboard codes
+    const touchMap = {
+        'btnUp': 'KeyW',
+        'btnDown': 'KeyS',
+        'btnLeft': 'KeyA',
+        'btnRight': 'KeyD',
+        'btnActionE': 'KeyE',
+        'btnActionF': 'KeyF'
+    };
+
+    ['btnUp', 'btnDown', 'btnLeft', 'btnRight', 'btnActionE', 'btnActionF'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('touchstart', e => {
+                e.preventDefault(); // Prevent double firing
+                keys[touchMap[id]] = true;
+            }, {passive: false});
+            
+            btn.addEventListener('touchend', e => {
+                e.preventDefault();
+                keys[touchMap[id]] = false;
+            }, {passive: false});
+            
+            btn.addEventListener('touchcancel', e => {
+                keys[touchMap[id]] = false;
+            });
+        }
+    });
 
     // Rover entity definition
     const rover = {

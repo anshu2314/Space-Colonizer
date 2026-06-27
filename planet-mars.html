@@ -126,6 +126,22 @@
         .celeb-stat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,215,0,0.3);border-radius:12px;padding:12px 20px;text-align:center;}
         .celeb-stat-num{font-family:'Orbitron',monospace;font-size:1.5em;color:#ffd700;}
         .celeb-stat-lbl{font-size:0.78em;color:rgba(255,255,255,0.5);text-transform:uppercase;}
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body { overflow-y: auto; height: auto; }
+            .main-layout { grid-template-columns: 1fr; overflow-y: visible; flex: none; }
+            .planet-panel { height: 40vh; flex-shrink: 0; }
+            #planetCanvas { width: 100%; height: 100%; max-height: 100%; object-fit: contain; }
+            .stats-panel { overflow-y: visible; border-left: none; border-top: 1px solid var(--border); }
+            .mission-modal { width: 95%; max-width: none; border-radius: 15px; }
+            .modal-content { padding: 15px; }
+            .modal-res-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+            .bottom-bar { flex-direction: column; padding: 12px; gap: 10px; }
+            .bottom-bar button { padding: 10px; width: 100%; justify-content: center; font-size: 0.9em; }
+            .topbar { flex-direction: column; gap: 10px; padding: 10px; }
+            .res-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>

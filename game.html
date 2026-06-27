@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Colonizer — Celestial Mission Control</title>
-    <meta name="description" content="Manage spacecraft fleet, monitor live lunar sifting and extraction parameters, and launch interplanetary rockets from space flight command center.">
-    <meta name="keywords" content="moon spaceflight center, space dashboard browser game, orbit capture, rocket simulation">
+    <title>Mission Control — Space Colonization Game Unblocked</title>
+    <meta name="description" content="Command your solar system colonization missions. Deploy orbiters, manage planet colonies, and explore the Moon in this unblocked space colonization game.">
+    <meta name="keywords" content="space colonization game unblocked, solar system mission control, deploy orbiter, moon rover sandbox, colonize planet game, free space browser game, play free space colonization game online in browser, browser based moon landing simulator, unblocked space games for school, base building space game unblocked, manage planetary colonies game, free sandbox space game no download, idle space mining game web browser, play space exploration game on school chromebook, space colonizing game, space colonizer, space colonizing things">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <style>
         body {
             margin: 0;
@@ -552,9 +553,53 @@
         .mf-retry:hover { transform:scale(1.06); }
 
         @keyframes colonizeGlow { 0%,100%{box-shadow:0 3px 16px rgba(255,215,0,.35)} 50%{box-shadow:0 3px 28px rgba(255,215,0,.85)} }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: auto;
+            }
+            .solar-system-section, .solar-system-container {
+                height: 50vh;
+            }
+            .game-section {
+                max-height: none;
+                overflow-y: visible;
+                padding: 15px;
+            }
+            .spacecraft-controls {
+                transform: scale(0.8);
+                transform-origin: bottom left;
+                bottom: 10px;
+                left: 10px;
+            }
+            .zoom-controls {
+                transform: scale(0.8);
+                transform-origin: top right;
+                top: 10px;
+                right: 10px;
+            }
+            .planet-info-popup {
+                width: 90%;
+                left: 5% !important;
+                top: 10% !important;
+                transform: none !important;
+            }
+            .planets-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Invisible SEO Keyword Block -->
+    <div style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); border:0;">
+        <h1>Best Space Colonization Games</h1>
+        <p>Command the best free space colonization games unblocked directly in your browser. This galaxy colonization game offers in-depth planetary management rivaling pc games space colonization. Deploy orbiters, circularize orbits, run a rover on the moon, and expand your cosmic empire in this interactive unblocked space colonization game. If you are a fan of immersive space colonization games, this free space colonization game will let you explore every planet. Become the ultimate architect of your solar system by playing the best space colonization game ever made online today! Play free space colonization game online in browser. This is an unblocked space game for school, ideal for students. Enjoy a base building space game unblocked without needing a download. Play the free sandbox space game no download. Experience an idle space mining game web browser integration that makes it the best manage planetary colonies game. Play space exploration game on school chromebook. As the premier space colonizer, you will experience the best space colonizing game mechanics available. Build space colonizing things like titanium sifters and advanced landers to expand your reach.</p>
+    </div>
+
     <div class="solar-system-section">
         <div class="solar-system-container">
             <canvas id="solarSystemCanvas" width="800" height="600"></canvas>

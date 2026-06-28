@@ -75,7 +75,7 @@
         @keyframes modalIn{from{transform:scale(0.7) translateY(50px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
         .modal-bg{position:absolute;inset:0;background:url('onmoon.gif') center/cover no-repeat;filter:hue-rotate(40deg);}
         .modal-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,10,0,0.85) 0%,rgba(20,10,0,0.65) 50%,rgba(20,10,0,0.9) 100%);}
-        .modal-content{position:relative;z-index:2;padding:28px;}
+        .modal-content{position:relative;z-index:2;padding:28px;max-height:85vh;overflow-y:auto;}
         .modal-title{font-family:'Orbitron',monospace;font-size:1.5em;color:var(--accent);text-align:center;text-shadow:0 0 20px var(--glow);margin-bottom:6px;}
         .modal-sub{text-align:center;color:rgba(255,255,255,0.55);margin-bottom:20px;font-size:0.92em;}
         .modal-res-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:18px;}

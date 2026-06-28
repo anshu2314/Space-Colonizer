@@ -518,6 +518,76 @@
         .m-action-btn { padding:12px 28px; background:linear-gradient(135deg,#7b2ff7,#66fcf1); border:none; border-radius:28px; color:#000; font-weight:900; font-size:.88em; cursor:pointer; letter-spacing:2px; text-transform:uppercase; transition:.3s; box-shadow:0 5px 20px rgba(123,47,247,.5); white-space:nowrap; display:none; }
         .m-action-btn.show { display:block; }
         .m-action-btn:hover { transform:translateY(-2px) scale(1.04); }
+
+        /* Mobile Flight Controls */
+        .mobile-flight-controls {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 6000;
+        }
+        .mfc-dpad {
+            display: grid;
+            grid-template-columns: 50px 50px 50px;
+            grid-template-rows: 50px 50px;
+            gap: 8px;
+            pointer-events: auto;
+        }
+        .mfc-btn {
+            background: rgba(102,252,241,0.15);
+            border: 2px solid rgba(102,252,241,0.5);
+            border-radius: 12px;
+            color: #66fcf1;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(102,252,241,0.2);
+        }
+        .mfc-btn:active { background: rgba(102,252,241,0.4); }
+        .mfc-up { grid-column: 2; grid-row: 1; }
+        .mfc-left { grid-column: 1; grid-row: 2; }
+        .mfc-right { grid-column: 3; grid-row: 2; }
+        
+        .mfc-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: auto;
+            justify-content: flex-end;
+        }
+        .mfc-action-btn {
+            background: rgba(123,47,247,0.3);
+            border: 2px solid rgba(123,47,247,0.6);
+            border-radius: 20px;
+            padding: 12px 20px;
+            color: #fff;
+            font-family: 'Segoe UI', monospace;
+            font-weight: bold;
+            font-size: 0.85em;
+            user-select: none;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(123,47,247,0.3);
+        }
+        .mfc-action-btn:active { background: rgba(123,47,247,0.6); }
+
+        @media (max-width: 768px) {
+            .mobile-flight-controls { display: flex; }
+            .m-prompt { padding: 10px; }
+            .m-prompt-text { font-size: 0.75em; max-width: 180px; }
+            .m-gauges { right: 10px; top: 25%; transform: none; }
+            .mg-box { min-width: 100px; padding: 8px; }
+            .mg-value { font-size: 1.1em; }
+        }
+
         .m-action-btn:disabled { opacity:.38; cursor:not-allowed; transform:none; box-shadow:none; }
 
         .mission-dots { position:absolute; bottom:90px; left:50%; transform:translateX(-50%); display:flex; gap:9px; pointer-events:none; }
@@ -795,6 +865,20 @@
                     <button class="m-thruster-btn" id="mThrustBtn" onmousedown="mThrustOn()" onmouseup="mThrustOff()" ontouchstart="mThrustOn()" ontouchend="mThrustOff()">🔥 FIRE THRUSTERS</button>
                 </div>
                 <button class="m-action-btn" id="mActionBtn" onclick="mActionClick()">🚀 IGNITION</button>
+            </div>
+            
+            <!-- Mobile Flight Controls -->
+            <div class="mobile-flight-controls" id="mobFlightCtrl">
+                <div class="mfc-dpad">
+                    <div class="mfc-btn mfc-up" id="mfUp">▲</div>
+                    <div class="mfc-btn mfc-left" id="mfLeft">◀</div>
+                    <div class="mfc-btn mfc-right" id="mfRight">▶</div>
+                </div>
+                <div class="mfc-actions">
+                    <div class="mfc-action-btn" id="mfShift">SHIFT (Ignition)</div>
+                    <div class="mfc-action-btn" id="mfEnter">ENTER (Stage)</div>
+                    <div class="mfc-action-btn" id="mfSpace">SPACE (Brake)</div>
+                </div>
             </div>
 
             <button class="m-abort" onclick="closeMission()">✕ Abort Mission</button>
@@ -1685,6 +1769,24 @@
         console.log('🚀 Space Colonizer loaded! Click Resource Tools to access detailed resource management.');
         console.log('🔧 Construction material amounts are hidden - use Resource Tools to see and manage them!');
         console.log('🌌 Enhanced Solar System: Click on planets to zoom in and learn about them, use zoom controls or mouse wheel!');
+
+        // Mobile flight control bindings
+        const mobKeys = {
+            'mfUp': 'ArrowUp',
+            'mfLeft': 'ArrowLeft',
+            'mfRight': 'ArrowRight',
+            'mfShift': 'ShiftLeft',
+            'mfEnter': 'Enter',
+            'mfSpace': 'Space'
+        };
+        for (const [id, code] of Object.entries(mobKeys)) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('touchstart', e => { e.preventDefault(); if (typeof keyState !== 'undefined') keyState[code] = true; }, {passive: false});
+                el.addEventListener('touchend', e => { e.preventDefault(); if (typeof keyState !== 'undefined') keyState[code] = false; }, {passive: false});
+                el.addEventListener('touchcancel', e => { if (typeof keyState !== 'undefined') keyState[code] = false; });
+            }
+        }
     </script>
 </body>
 </html>

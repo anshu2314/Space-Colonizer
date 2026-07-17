@@ -216,6 +216,35 @@
                 height: 120px;
             }
         }
+
+        /* Visible SEO About Card for Google Indexing */
+        .seo-about-card {
+            background: rgba(6, 18, 36, 0.7);
+            border: 1px solid rgba(102, 252, 241, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            max-width: 600px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            color: rgba(255, 255, 255, 0.75);
+            animation: fadeIn 1.5s ease-out forwards;
+            animation-delay: 0.5s;
+            opacity: 0;
+        }
+        .seo-about-card h3 {
+            color: #66fcf1;
+            margin-top: 0;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .seo-about-card p {
+            font-size: 0.85em;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9QCT8GP6KW"></script>
@@ -228,11 +257,7 @@
 </head>
 <body>
     <!-- Accessibility and Search Engine Optimization Keywords block -->
-    <!-- Accessibility and Search Engine Optimization Keywords block -->
-    <div class="sr-only">
-        <h1>Space Colonizer - The Ultimate Space Colonization Game</h1>
-        <p>Welcome to Space Colonizer, the ultimate free browser-based space colonization strategy game! If you are searching for a comprehensive space colonizing game that lets you build an interplanetary empire from scratch, you have found it. In Space Colonizer, you don't just click buttons; you actively manage space colonizing things like titanium extractors, lunar landers, and orbital satellites. Experience the thrill of launching rockets with real-time physics, circularizing your orbits, and driving a lunar rover across the Moon's cratered surface in our dedicated rover sandbox mode. As a fully unblocked space game, you can play directly in your web browser with no downloads required. Expand your civilization from Earth to Mars and Venus, utilizing strategic resource management to construct advanced sci-fi bases. Whether you are looking for an idle planet builder, an interactive space exploration simulator, or the absolute best free space colonization game available online today, Space Colonizer delivers a massively expansive galaxy management experience.</p>
-    </div>
+    <!-- Removed the hidden sr-only block as it penalizes SEO -->
 
     <div class="stars">
         <video autoplay muted loop playsinline>
@@ -252,6 +277,12 @@
                 <input type="text" id="userName" placeholder="Enter Commander Name" autocomplete="off">
             </div>
             <button class="start-btn" onclick="startMission()">Begin Mission</button>
+        </div>
+        
+        <!-- VISIBLE SEO BLOCK FOR GOOGLE -->
+        <div class="seo-about-card">
+            <h3>About Space Colonizer</h3>
+            <p>Space Colonizer is the ultimate free browser-based space colonization strategy game. Launch rockets, deploy orbiters, and send satellites to alien worlds. Establish advanced planetary bases and colonize the Moon, Mars, and Venus. Build space colonizing things like titanium sifters and deep-core drills. Command your interplanetary empire and physically drive a lunar rover across cratered surfaces in our immersive rover sandbox. Play this unblocked space colonization game directly in your browser with zero downloads required!</p>
         </div>
     </div>
 
